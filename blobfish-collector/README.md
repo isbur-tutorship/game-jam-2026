@@ -100,4 +100,4 @@
 
 **Приятной игры! 🎮🐟**
 
-Made with ❤️ for VANYA_L0X
+Made with ❤️ for VANYA_L0VE
