@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Коллекционер Сокровищ 💎</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>💎 Коллекционер Сокровищ 💎</h1>
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="stat-label">Монеты:</span>
+                    <span id="coins" class="stat-value">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">За клик:</span>
+                    <span id="perClick" class="stat-value">1</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">В секунду:</span>
+                    <span id="perSecond" class="stat-value">0</span>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <div class="game-area">
+                <button id="clickButton" class="click-button">
+                    <span class="button-emoji">💰</span>
+                    <span class="button-text">КЛИК!</span>
+                </button>
+                <div id="clickEffects"></div>
+            </div>
+
+            <div class="active-buffs">
+                <h3>🌟 Активные бафы:</h3>
+                <div id="buffsList"></div>
+            </div>
+
+            <div class="shop">
+                <h2>🏪 Магазин улучшений</h2>
+                <div id="shopItems"></div>
+            </div>
+
+            <div class="collection">
+                <h2>📦 Коллекция ({<span id="collectionCount">0</span>}/12)</h2>
+                <div id="collectionGrid"></div>
+            </div>
+        </main>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>

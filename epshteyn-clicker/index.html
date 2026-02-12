@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Кликер Игра - Эпштейн</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+
+        .click-area {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .main-button {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            font-size: 1.5em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.1s;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .main-button:hover {
+            transform: scale(1.05);
+        }
+
+        .main-button:active {
+            transform: scale(0.95);
+        }
+
+        .upgrades {
+            margin-top: 30px;
+        }
+
+        .upgrades h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .upgrade-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .upgrade-item {
+            background: #f8f9fa;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .upgrade-item:hover:not(.disabled) {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .upgrade-item.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .upgrade-name {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .upgrade-desc {
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .upgrade-cost {
+            color: #f5576c;
+            font-weight: bold;
+        }
+
+        .upgrade-count {
+            color: #28a745;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .loot-display {
+            margin-top: 30px;
+            min-height: 100px;
+        }
+
+        .loot-display h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .loot-item {
+            display: inline-block;
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin: 5px;
+            animation: dropIn 0.5s ease-out;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .loot-item.rare {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        }
+
+        .loot-item.epic {
+            background: linear-gradient(135deg, #d299c2 0%, #fef9d7 100%);
+        }
+
+        .loot-item.legendary {
+            background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+            font-weight: bold;
+        }
+
+        @keyframes dropIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .floating-number {
+            position: fixed;
+            font-weight: bold;
+            font-size: 2em;
+            pointer-events: none;
+            animation: floatUp 1s ease-out forwards;
+            color: #f5576c;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        @keyframes floatUp {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-100px);
+            }
+        }
+
+        .inventory {
+            margin-top: 20px;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .inventory h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+        }
+
+        .inventory-item {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            border: 2px solid #ddd;
+        }
+
+        .inventory-item-name {
+            font-weight: bold;
+            font-size: 0.9em;
+            margin-bottom: 3px;
+        }
+
+        .inventory-item-count {
+            color: #666;
+            font-size: 0.85em;
+        }
+
+        .hero-section {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .hero-image {
+            width: 200px;
+            height: 200px;
+            border-radius: 15px;
+            object-fit: cover;
+            border: 4px solid #667eea;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s;
+        }
+
+        .hero-image:hover {
+            transform: scale(1.05) rotate(2deg);
+        }
+
+        .car-image {
+            width: 300px;
+            height: 200px;
+            border-radius: 15px;
+            object-fit: cover;
+            border: 4px solid #f5576c;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s;
+        }
+
+        .car-image:hover {
+            transform: scale(1.05);
+        }
+
+        .music-control {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 15px 25px;
+            border-radius: 50px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .music-control:hover {
+            transform: scale(1.1);
+            box-shadow: 0 7px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        .music-control.playing {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            }
+            50% {
+                box-shadow: 0 5px 30px rgba(245, 87, 108, 0.6);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🎮 Кликер - Эпштейн</h1>
+        
+        <div class="hero-section">
+            <img src="https://media.gq-magazine.co.uk/photos/5d66df8ca064e60008a89e3b/16:9/w_2560%2Cc_limit/Jeffrey-Epstein-GQ-29Aug19_GettyImages_b.jpg" 
+                 alt="Jeffrey Epstein" 
+                 class="hero-image"
+                 onerror="this.src='https://via.placeholder.com/200x200/667eea/ffffff?text=Epstein'">
+            <img src="https://www.mercedes-benz.ru/passengercars/mercedes-benz-cars/models/g-class/suv-w463/_jcr_content/image.MQ6.2.2x.20230620095838.png" 
+                 alt="Mercedes G-Class" 
+                 class="car-image"
+                 onerror="this.src='https://via.placeholder.com/300x200/f5576c/ffffff?text=G-Class'">
+        </div>
+        
+        <div class="stats">
+            <div class="stat-box">
+                <div class="stat-label">Монеты</div>
+                <div class="stat-value" id="coins">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">За клик</div>
+                <div class="stat-value" id="perClick">1</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">В секунду</div>
+                <div class="stat-value" id="perSecond">0</div>
+            </div>
+        </div>
+
+        <div class="click-area">
+            <button class="main-button" id="mainButton">КЛИК!</button>
+        </div>
+
+        <div class="loot-display">
+            <h2>💎 Последний дроп</h2>
+            <div id="lootContainer"></div>
+        </div>
+
+        <div class="inventory">
+            <h3>📦 Инвентарь</h3>
+            <div class="inventory-grid" id="inventoryGrid"></div>
+        </div>
+
+        <div class="upgrades">
+            <h2>⬆️ Улучшения</h2>
+            <div class="upgrade-grid">
+                <div class="upgrade-item" data-upgrade="cursor">
+                    <div class="upgrade-name">🖱️ Курсор</div>
+                    <div class="upgrade-desc">+1 монета за клик</div>
+                    <div class="upgrade-cost">Цена: <span id="cursor-cost">10</span></div>
+                    <div class="upgrade-count">Куплено: <span id="cursor-count">0</span></div>
+                </div>
+
+                <div class="upgrade-item" data-upgrade="autoclicker">
+                    <div class="upgrade-name">🤖 Автокликер</div>
+                    <div class="upgrade-desc">+1 монета в секунду</div>
+                    <div class="upgrade-cost">Цена: <span id="autoclicker-cost">50</span></div>
+                    <div class="upgrade-count">Куплено: <span id="autoclicker-count">0</span></div>
+                </div>
+
+                <div class="upgrade-item" data-upgrade="factory">
+                    <div class="upgrade-name">🏭 Фабрика</div>
+                    <div class="upgrade-desc">+5 монет в секунду</div>
+                    <div class="upgrade-cost">Цена: <span id="factory-cost">200</span></div>
+                    <div class="upgrade-count">Куплено: <span id="factory-count">0</span></div>
+                </div>
+
+                <div class="upgrade-item" data-upgrade="mine">
+                    <div class="upgrade-name">⛏️ Шахта</div>
+                    <div class="upgrade-desc">+20 монет в секунду</div>
+                    <div class="upgrade-cost">Цена: <span id="mine-cost">1000</span></div>
+                    <div class="upgrade-count">Куплено: <span id="mine-count">0</span></div>
+                </div>
+
+                <div class="upgrade-item" data-upgrade="lab">
+                    <div class="upgrade-name">🔬 Лаборатория</div>
+                    <div class="upgrade-desc">+100 монет в секунду</div>
+                    <div class="upgrade-cost">Цена: <span id="lab-cost">5000</span></div>
+                    <div class="upgrade-count">Куплено: <span id="lab-count">0</span></div>
+                </div>
+
+                <div class="upgrade-item" data-upgrade="multiplier">
+                    <div class="upgrade-name">⚡ Множитель</div>
+                    <div class="upgrade-desc">x2 к монетам за клик</div>
+                    <div class="upgrade-cost">Цена: <span id="multiplier-cost">500</span></div>
+                    <div class="upgrade-count">Куплено: <span id="multiplier-count">0</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Игровые переменные
+        let coins = 0;
+        let clickPower = 1;
+        let coinsPerSecond = 0;
+        let clickMultiplier = 1;
+
+        // Улучшения
+        const upgrades = {
+            cursor: { count: 0, cost: 10, baseCost: 10, clickBonus: 1 },
+            autoclicker: { count: 0, cost: 50, baseCost: 50, cps: 1 },
+            factory: { count: 0, cost: 200, baseCost: 200, cps: 5 },
+            mine: { count: 0, cost: 1000, baseCost: 1000, cps: 20 },
+            lab: { count: 0, cost: 5000, baseCost: 5000, cps: 100 },
+            multiplier: { count: 0, cost: 500, baseCost: 500 }
+        };
+
+        // Инвентарь
+        const inventory = {};
+
+        // Предметы для дропа
+        const lootTable = [
+            { name: '🪙 Монета', rarity: 'common', coinsBonus: 5, chance: 30 },
+            { name: '💰 Мешок монет', rarity: 'rare', coinsBonus: 25, chance: 15 },
+            { name: '💎 Алмаз', rarity: 'epic', coinsBonus: 100, chance: 5 },
+            { name: '👑 Корона', rarity: 'legendary', coinsBonus: 500, chance: 1 },
+            { name: '🎁 Подарок', rarity: 'rare', coinsBonus: 50, chance: 10 },
+            { name: '⭐ Звезда', rarity: 'epic', coinsBonus: 150, chance: 3 },
+            { name: '🔮 Кристалл', rarity: 'rare', coinsBonus: 75, chance: 8 },
+            { name: '🏆 Трофей', rarity: 'legendary', coinsBonus: 1000, chance: 0.5 }
+        ];
+
+        // DOM элементы
+        const mainButton = document.getElementById('mainButton');
+        const coinsDisplay = document.getElementById('coins');
+        const perClickDisplay = document.getElementById('perClick');
+        const perSecondDisplay = document.getElementById('perSecond');
+        const lootContainer = document.getElementById('lootContainer');
+        const inventoryGrid = document.getElementById('inventoryGrid');
+
+        // Обработчик клика на главную кнопку
+        mainButton.addEventListener('click', (e) => {
+            const earnedCoins = clickPower * clickMultiplier;
+            coins += earnedCoins;
+            updateDisplay();
+            
+            // Плавающее число
+            createFloatingNumber(earnedCoins, e.clientX, e.clientY);
+            
+            // Шанс на дроп (15% на каждый клик)
+            if (Math.random() < 0.15) {
+                dropLoot();
+            }
+        });
+
+        // Создание плавающего числа
+        function createFloatingNumber(value, x, y) {
+            const floatingNum = document.createElement('div');
+            floatingNum.className = 'floating-number';
+            floatingNum.textContent = `+${value}`;
+            floatingNum.style.left = x + 'px';
+            floatingNum.style.top = y + 'px';
+            document.body.appendChild(floatingNum);
+            
+            setTimeout(() => floatingNum.remove(), 1000);
+        }
+
+        // Дроп предметов
+        function dropLoot() {
+            const roll = Math.random() * 100;
+            let cumulativeChance = 0;
+            
+            for (const item of lootTable) {
+                cumulativeChance += item.chance;
+                if (roll <= cumulativeChance) {
+                    showLoot(item);
+                    coins += item.coinsBonus;
+                    
+                    // Добавление в инвентарь
+                    if (inventory[item.name]) {
+                        inventory[item.name].count++;
+                    } else {
+                        inventory[item.name] = { 
+                            count: 1, 
+                            rarity: item.rarity,
+                            coinsBonus: item.coinsBonus 
+                        };
+                    }
+                    
+                    updateInventory();
+                    updateDisplay();
+                    break;
+                }
+            }
+        }
+
+        // Показать дроп
+        function showLoot(item) {
+            lootContainer.innerHTML = '';
+            const lootElement = document.createElement('div');
+            lootElement.className = `loot-item ${item.rarity}`;
+            lootElement.textContent = `${item.name} (+${item.coinsBonus} монет)`;
+            lootContainer.appendChild(lootElement);
+        }
+
+        // Обновление инвентаря
+        function updateInventory() {
+            inventoryGrid.innerHTML = '';
+            
+            const sortedItems = Object.entries(inventory).sort((a, b) => {
+                const rarityOrder = { common: 1, rare: 2, epic: 3, legendary: 4 };
+                return rarityOrder[b[1].rarity] - rarityOrder[a[1].rarity];
+            });
+            
+            for (const [name, data] of sortedItems) {
+                const itemElement = document.createElement('div');
+                itemElement.className = 'inventory-item';
+                itemElement.innerHTML = `
+                    <div class="inventory-item-name">${name}</div>
+                    <div class="inventory-item-count">x${data.count}</div>
+                `;
+                inventoryGrid.appendChild(itemElement);
+            }
+        }
+
+        // Покупка улучшений
+        document.querySelectorAll('.upgrade-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const upgradeType = item.dataset.upgrade;
+                buyUpgrade(upgradeType);
+            });
+        });
+
+        function buyUpgrade(type) {
+            const upgrade = upgrades[type];
+            
+            if (coins >= upgrade.cost) {
+                coins -= upgrade.cost;
+                upgrade.count++;
+                
+                // Применение эффекта улучшения
+                if (type === 'cursor') {
+                    clickPower += upgrade.clickBonus;
+                } else if (type === 'multiplier') {
+                    clickMultiplier *= 2;
+                } else {
+                    coinsPerSecond += upgrade.cps;
+                }
+                
+                // Увеличение стоимости (x1.15)
+                upgrade.cost = Math.floor(upgrade.baseCost * Math.pow(1.15, upgrade.count));
+                
+                updateDisplay();
+                updateUpgradeDisplay();
+            }
+        }
+
+        // Обновление отображения улучшений
+        function updateUpgradeDisplay() {
+            for (const [type, upgrade] of Object.entries(upgrades)) {
+                document.getElementById(`${type}-cost`).textContent = upgrade.cost;
+                document.getElementById(`${type}-count`).textContent = upgrade.count;
+                
+                const upgradeElement = document.querySelector(`[data-upgrade="${type}"]`);
+                if (coins >= upgrade.cost) {
+                    upgradeElement.classList.remove('disabled');
+                } else {
+                    upgradeElement.classList.add('disabled');
+                }
+            }
+        }
+
+        // Обновление основного дисплея
+        function updateDisplay() {
+            coinsDisplay.textContent = Math.floor(coins);
+            perClickDisplay.textContent = clickPower * clickMultiplier;
+            perSecondDisplay.textContent = coinsPerSecond;
+            updateUpgradeDisplay();
+        }
+
+        // Автокликер (пассивный доход)
+        setInterval(() => {
+            if (coinsPerSecond > 0) {
+                coins += coinsPerSecond / 10; // Обновление каждые 100мс для плавности
+                updateDisplay();
+            }
+        }, 100);
+
+        // Инициализация
+        updateDisplay();
+        updateInventory();
+
+        // Музыка (Phonk)
+        const audio = new Audio('ZXKAI – Эла дес эла соби нубалеприсон.mp3');
+        audio.loop = true;
+        audio.volume = 0.3;
+
+        const musicBtn = document.getElementById('musicBtn');
+        let isPlaying = false;
+
+        musicBtn.addEventListener('click', () => {
+            if (isPlaying) {
+                audio.pause();
+                musicBtn.textContent = '🔇 Включить музыку';
+                musicBtn.classList.remove('playing');
+            } else {
+                audio.play().catch(e => console.log('Autoplay blocked:', e));
+                musicBtn.textContent = '🔊 Музыка играет';
+                musicBtn.classList.add('playing');
+            }
+            isPlaying = !isPlaying;
+        });
+
+        // Попытка автозапуска музыки (может быть заблокирован браузером)
+        window.addEventListener('click', () => {
+            if (!isPlaying) {
+                audio.play().catch(e => {});
+                musicBtn.textContent = '🔊 Музыка играет';
+                musicBtn.classList.add('playing');
+                isPlaying = true;
+            }
+        }, { once: true });
+    </script>
+
+    <!-- Кнопка управления музыкой -->
+    <div class="music-control" id="musicBtn">🔇 Включить музыку</div>
+</body>
+</html>

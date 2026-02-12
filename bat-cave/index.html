@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Пещера Летучих Мышей</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <header>
+            <h1>🦇 Пещера Летучих Мышей 🦇</h1>
+        </header>
+
+        <div class="stats-panel">
+            <div class="stat">
+                <span class="stat-label">💎 Кристаллы:</span>
+                <span class="stat-value" id="crystals">0</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">🪙 Монеты:</span>
+                <span class="stat-value" id="coins">0</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">🦇 Мои летучие мыши:</span>
+                <span class="stat-value" id="bat-count">0</span>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- Зона собирательства -->
+            <div class="gathering-zone">
+                <h2>🌙 Зона собирательства</h2>
+                <div class="gathering-area" id="gathering-area">
+                    <!-- Здесь будут появляться предметы для сбора -->
+                </div>
+                <div class="gathering-info">
+                    <p>Кликайте по появляющимся предметам!</p>
+                    <button id="auto-gather-btn" class="btn btn-disabled" disabled>
+                        🤖 Авто-сбор (100 монет)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Магазин лутбоксов -->
+            <div class="lootbox-zone">
+                <h2>📦 Магазин лутбоксов</h2>
+                <div class="lootbox-container">
+                    <div class="lootbox-item">
+                        <div class="lootbox-card basic">
+                            <h3>Обычный сундук</h3>
+                            <div class="lootbox-icon">📦</div>
+                            <p class="lootbox-price">💎 50 кристаллов</p>
+                            <button class="btn btn-primary" onclick="openLootbox('basic')">Открыть</button>
+                        </div>
+                    </div>
+                    <div class="lootbox-item">
+                        <div class="lootbox-card rare">
+                            <h3>Редкий сундук</h3>
+                            <div class="lootbox-icon">🎁</div>
+                            <p class="lootbox-price">💎 150 кристаллов</p>
+                            <button class="btn btn-primary" onclick="openLootbox('rare')">Открыть</button>
+                        </div>
+                    </div>
+                    <div class="lootbox-item">
+                        <div class="lootbox-card epic">
+                            <h3>Эпический сундук</h3>
+                            <div class="lootbox-icon">✨</div>
+                            <p class="lootbox-price">💎 300 кристаллов</p>
+                            <button class="btn btn-primary" onclick="openLootbox('epic')">Открыть</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Коллекция летучих мышей -->
+        <div class="collection-zone">
+            <h2>🦇 Моя коллекция летучих мышей</h2>
+            <div class="bat-collection" id="bat-collection">
+                <p class="empty-message">У вас пока нет летучих мышей. Открывайте сундуки!</p>
+            </div>
+        </div>
+
+        <!-- Модальное окно результата -->
+        <div class="modal" id="reward-modal">
+            <div class="modal-content">
+                <h2>🎉 Награда!</h2>
+                <div class="reward-display" id="reward-display"></div>
+                <button class="btn btn-primary" onclick="closeModal()">Отлично!</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

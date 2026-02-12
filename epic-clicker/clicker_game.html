@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💎 Epic Clicker Game 💎</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 250px 1fr 350px;
+            grid-template-rows: auto 1fr;
+            height: 100vh;
+            gap: 10px;
+            padding: 10px;
+        }
+
+        .header {
+            grid-column: 1 / 4;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #FFD700;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .buffs-panel {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 15px;
+            overflow-y: auto;
+        }
+
+        .main-game {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .click-button {
+            width: 250px;
+            height: 250px;
+            font-size: 100px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border: 5px solid #FFD700;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.1s;
+            box-shadow: 0 10px 40px rgba(255, 215, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .click-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 60px rgba(255, 215, 0, 0.7);
+        }
+
+        .click-button:active {
+            transform: scale(0.95);
+        }
+
+        .click-button.critical {
+            animation: criticalPulse 0.3s;
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+        }
+
+        @keyframes criticalPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+
+        .floating-text {
+            position: absolute;
+            font-size: 24px;
+            font-weight: bold;
+            color: #FFD700;
+            pointer-events: none;
+            animation: floatUp 1s ease-out forwards;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-100px);
+            }
+        }
+
+        .upgrades-panel {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 15px;
+            overflow-y: auto;
+        }
+
+        .panel-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+            color: #FFD700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: rgba(255, 215, 0, 0.3);
+            border-color: #FFD700;
+        }
+
+        .tab:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .upgrade-item, .autoclicker-item, .buff-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .upgrade-item:hover, .autoclicker-item:hover, .buff-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #FFD700;
+            transform: translateX(5px);
+        }
+
+        .upgrade-item.locked {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .item-name {
+            font-weight: bold;
+            color: #FFD700;
+            margin-bottom: 5px;
+        }
+
+        .item-description {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 5px;
+        }
+
+        .item-price {
+            font-weight: bold;
+            color: #00FF00;
+        }
+
+        .item-count {
+            float: right;
+            background: rgba(255, 215, 0, 0.3);
+            padding: 2px 8px;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+
+        .collectible-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .collectible-item.collected {
+            background: rgba(0, 255, 0, 0.2);
+            border: 2px solid #00FF00;
+        }
+
+        .collectible-item.locked {
+            opacity: 0.5;
+        }
+
+        .log-area {
+            margin-top: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 8px;
+            height: 150px;
+            overflow-y: auto;
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .log-entry {
+            padding: 2px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .buff-timer {
+            background: rgba(255, 215, 0, 0.3);
+            padding: 8px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .progress-bar {
+            background: rgba(0, 0, 0, 0.3);
+            height: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #FFD700 0%, #FFA500 100%);
+            transition: width 0.3s;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            border-color: #FFD700;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .particle {
+            position: absolute;
+            pointer-events: none;
+            animation: particleFloat 2s ease-out forwards;
+        }
+
+        @keyframes particleFloat {
+            0% {
+                opacity: 1;
+                transform: translate(0, 0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(var(--tx), var(--ty)) scale(0);
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 215, 0, 0.5);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 215, 0, 0.7);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💎 EPIC CLICKER GAME 💎</h1>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="coinsDisplay">0</div>
+                    <div class="stat-label">💰 Монеты</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="cpsDisplay">0</div>
+                    <div class="stat-label">⚡ Монет/сек</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="clickPowerDisplay">1</div>
+                    <div class="stat-label">👆 Сила клика</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="clicksDisplay">0</div>
+                    <div class="stat-label">🖱️ Всего кликов</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="buffs-panel">
+            <div class="panel-title">✨ БАФЫ</div>
+            
+            <div id="activeBuffs"></div>
+
+            <div class="buff-item" onclick="activateGoldenClick()">
+                <div class="item-name">🌟 Золотой клик</div>
+                <div class="item-description">x10 к кликам на 10 сек</div>
+                <div class="item-price">💰 1,000</div>
+            </div>
+
+            <div class="buff-item" onclick="activateMegaCrit()">
+                <div class="item-name">⚡ Мега крит</div>
+                <div class="item-description">100% крит на 5 сек</div>
+                <div class="item-price">💰 2,500</div>
+            </div>
+
+            <div class="buff-item" onclick="activateFrenzy()">
+                <div class="item-name">🔥 Безумие</div>
+                <div class="item-description">x5 CPS на 20 сек</div>
+                <div class="item-price">💰 5,000</div>
+            </div>
+
+            <div class="buff-item" onclick="openLuckyBox()">
+                <div class="item-name">🎁 Счастливая коробка</div>
+                <div class="item-description">Случайная награда</div>
+                <div class="item-price">💰 500</div>
+            </div>
+
+            <div class="buff-item" onclick="openMegaBox()">
+                <div class="item-name">🎁💎 Мега коробка</div>
+                <div class="item-description">ОГРОМНАЯ награда!</div>
+                <div class="item-price">💰 5,000</div>
+            </div>
+
+            <div class="buff-item" onclick="buyPrestigePoint()">
+                <div class="item-name">⭐ Очко престижа</div>
+                <div class="item-description">+10% ко всему навсегда!</div>
+                <div class="item-price">💰 100,000</div>
+            </div>
+        </div>
+
+        <div class="main-game">
+            <div id="clickButton" class="click-button" onclick="handleClick(event)">
+                💎
+            </div>
+            <div class="log-area" id="logArea"></div>
+        </div>
+
+        <div class="upgrades-panel">
+            <div class="panel-title">🎯 УЛУЧШЕНИЯ</div>
+            
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('upgrades')">⬆️ Клик</div>
+                <div class="tab" onclick="switchTab('autoclickers')">🤖 Авто</div>
+                <div class="tab" onclick="switchTab('collection')">🏆 Коллекция</div>
+            </div>
+
+            <div id="upgrades" class="tab-content active"></div>
+            <div id="autoclickers" class="tab-content"></div>
+            <div id="collection" class="tab-content"></div>
+        </div>
+    </div>
+
+    <script>
+        // Игровое состояние
+        let gameState = {
+            coins: 0,
+            totalClicks: 0,
+            clickPower: 1,
+            baseClickPower: 1,
+            critChance: 0,
+            critMultiplier: 2,
+            coinsPerSecond: 0,
+            prestigeMultiplier: 1,
+            
+            // Бафы
+            goldenClickActive: false,
+            goldenClickTimer: 0,
+            megaCritActive: false,
+            megaCritTimer: 0,
+            frenzyActive: false,
+            frenzyTimer: 0,
+            
+            upgrades: [],
+            autoClickers: [],
+            collectibles: []
+        };
+
+        // Инициализация улучшений
+        function initUpgrades() {
+            gameState.upgrades = [
+                { id: 1, name: '🖱️ Мощный курсор', desc: '+1 к клику', basePrice: 10, level: 0, value: 1, type: 'click' },
+                { id: 2, name: '✊ Железный палец', desc: '+5 к клику', basePrice: 100, level: 0, value: 5, type: 'click' },
+                { id: 3, name: '💪 Стальной кулак', desc: '+10 к клику', basePrice: 500, level: 0, value: 10, type: 'click' },
+                { id: 4, name: '🦾 Титановая рука', desc: '+50 к клику', basePrice: 2500, level: 0, value: 50, type: 'click' },
+                { id: 5, name: '⚡ Божественная мощь', desc: '+200 к клику', basePrice: 10000, level: 0, value: 200, type: 'click' },
+                { id: 6, name: '🔮 Космическая сила', desc: '+1000 к клику', basePrice: 50000, level: 0, value: 1000, type: 'click' },
+                
+                { id: 7, name: '🍀 Удача новичка', desc: '+5% крит шанс', basePrice: 200, level: 0, value: 5, type: 'crit_chance' },
+                { id: 8, name: '🎯 Точный глаз', desc: '+10% крит шанс', basePrice: 1000, level: 0, value: 10, type: 'crit_chance' },
+                { id: 9, name: '💫 Мастер критов', desc: '+15% крит шанс', basePrice: 5000, level: 0, value: 15, type: 'crit_chance' },
+                
+                { id: 10, name: '💥 Двойной урон', desc: 'Крит x3', basePrice: 500, level: 0, value: 1, type: 'crit_multi' },
+                { id: 11, name: '💢 Тройной урон', desc: 'Крит x4', basePrice: 2000, level: 0, value: 1, type: 'crit_multi' },
+                { id: 12, name: '🌟 Разрушитель', desc: 'Крит x5', basePrice: 10000, level: 0, value: 1, type: 'crit_multi' }
+            ];
+
+            gameState.autoClickers = [
+                { id: 1, name: '🤖 Робот-кликер', basePrice: 50, count: 0, cps: 1 },
+                { id: 2, name: '🏭 Автоматическая ферма', basePrice: 500, count: 0, cps: 5 },
+                { id: 3, name: '🏢 Кликерная фабрика', basePrice: 2000, count: 0, cps: 20 },
+                { id: 4, name: '🔬 Квантовый генератор', basePrice: 10000, count: 0, cps: 100 },
+                { id: 5, name: '🌌 Черная дыра монет', basePrice: 50000, count: 0, cps: 500 },
+                { id: 6, name: '🌍 Планетарная империя', basePrice: 250000, count: 0, cps: 2500 },
+                { id: 7, name: '🌠 Галактический комплекс', basePrice: 1000000, count: 0, cps: 10000 },
+                { id: 8, name: '🌌 Вселенский домен', basePrice: 10000000, count: 0, cps: 50000 }
+            ];
+
+            gameState.collectibles = [
+                { id: 1, name: '🥉 Бронзовая монета', clicks: 10, collected: false, bonus: 100 },
+                { id: 2, name: '🥈 Серебряная монета', clicks: 50, collected: false, bonus: 500 },
+                { id: 3, name: '🥇 Золотая монета', clicks: 100, collected: false, bonus: 1000 },
+                { id: 4, name: '💠 Платиновая монета', clicks: 500, collected: false, bonus: 5000 },
+                { id: 5, name: '💎 Алмаз', clicks: 1000, collected: false, bonus: 10000 },
+                { id: 6, name: '💚 Изумруд', clicks: 2500, collected: false, bonus: 25000 },
+                { id: 7, name: '❤️ Рубин', clicks: 5000, collected: false, bonus: 50000 },
+                { id: 8, name: '💜 Аметист', clicks: 10000, collected: false, bonus: 100000 },
+                { id: 9, name: '🔮 Мистический кристалл', clicks: 25000, collected: false, bonus: 250000 },
+                { id: 10, name: '⭐ Легендарный артефакт', clicks: 50000, collected: false, bonus: 500000 },
+                { id: 11, name: '🌟 Мифическая реликвия', clicks: 100000, collected: false, bonus: 1000000 },
+                { id: 12, name: '✨ Божественное сокровище', clicks: 250000, collected: false, bonus: 5000000 }
+            ];
+        }
+
+        // Обработка клика
+        function handleClick(event) {
+            gameState.totalClicks++;
+            
+            let reward = gameState.clickPower * gameState.prestigeMultiplier;
+            let isCrit = false;
+            
+            // Золотой клик
+            if (gameState.goldenClickActive) {
+                reward *= 10;
+            }
+            
+            // Крит
+            let critRoll = Math.random() * 100;
+            if (critRoll < gameState.critChance || gameState.megaCritActive) {
+                reward *= gameState.critMultiplier;
+                isCrit = true;
+                document.getElementById('clickButton').classList.add('critical');
+                setTimeout(() => {
+                    document.getElementById('clickButton').classList.remove('critical');
+                }, 300);
+                
+                showFloatingText('+' + formatNumber(reward) + ' ⚡КРИТ!', event.clientX, event.clientY, '#FFD700');
+            } else {
+                showFloatingText('+' + formatNumber(reward), event.clientX, event.clientY);
+            }
+            
+            gameState.coins += Math.floor(reward);
+            
+            // Создание частиц
+            createParticles(event.clientX, event.clientY, isCrit ? 15 : 5);
+            
+            // Проверка достижений
+            checkCollectibles();
+            
+            updateUI();
+        }
+
+        // Покупка улучшения
+        function buyUpgrade(id) {
+            const upgrade = gameState.upgrades.find(u => u.id === id);
+            const price = Math.floor(upgrade.basePrice * Math.pow(1.5, upgrade.level));
+            
+            if (gameState.coins >= price) {
+                gameState.coins -= price;
+                upgrade.level++;
+                
+                switch(upgrade.type) {
+                    case 'click':
+                        gameState.baseClickPower += upgrade.value;
+                        break;
+                    case 'crit_chance':
+                        gameState.critChance += upgrade.value;
+                        break;
+                    case 'crit_multi':
+                        gameState.critMultiplier += upgrade.value;
+                        break;
+                }
+                
+                calculateClickPower();
+                addLog(`✅ Куплено: ${upgrade.name} (Ур. ${upgrade.level})`);
+                updateUI();
+                renderUpgrades();
+            } else {
+                addLog('❌ Недостаточно монет!');
+            }
+        }
+
+        // Покупка автокликера
+        function buyAutoClicker(id) {
+            const auto = gameState.autoClickers.find(a => a.id === id);
+            const price = Math.floor(auto.basePrice * Math.pow(1.15, auto.count));
+            
+            if (gameState.coins >= price) {
+                gameState.coins -= price;
+                auto.count++;
+                
+                calculateCPS();
+                addLog(`✅ Куплено: ${auto.name} (x${auto.count})`);
+                updateUI();
+                renderAutoClickers();
+            } else {
+                addLog('❌ Недостаточно монет!');
+            }
+        }
+
+        // Расчет силы клика
+        function calculateClickPower() {
+            gameState.clickPower = gameState.baseClickPower;
+        }
+
+        // Расчет монет в секунду
+        function calculateCPS() {
+            gameState.coinsPerSecond = 0;
+            gameState.autoClickers.forEach(auto => {
+                gameState.coinsPerSecond += auto.cps * auto.count;
+            });
+            
+            if (gameState.frenzyActive) {
+                gameState.coinsPerSecond *= 5;
+            }
+        }
+
+        // Бафы
+        function activateGoldenClick() {
+            if (gameState.coins >= 1000) {
+                gameState.coins -= 1000;
+                gameState.goldenClickActive = true;
+                gameState.goldenClickTimer = 10;
+                addLog('🌟 Золотой клик активирован!');
+                updateUI();
+            } else {
+                addLog('❌ Нужно 1,000 монет!');
+            }
+        }
+
+        function activateMegaCrit() {
+            if (gameState.coins >= 2500) {
+                gameState.coins -= 2500;
+                gameState.megaCritActive = true;
+                gameState.megaCritTimer = 5;
+                addLog('⚡ Мега крит активирован!');
+                updateUI();
+            } else {
+                addLog('❌ Нужно 2,500 монет!');
+            }
+        }
+
+        function activateFrenzy() {
+            if (gameState.coins >= 5000) {
+                gameState.coins -= 5000;
+                gameState.frenzyActive = true;
+                gameState.frenzyTimer = 20;
+                calculateCPS();
+                addLog('🔥 Безумие активировано!');
+                updateUI();
+            } else {
+                addLog('❌ Нужно 5,000 монет!');
+            }
+        }
+
+        function openLuckyBox() {
+            if (gameState.coins >= 500) {
+                gameState.coins -= 500;
+                
+                const luck = Math.random() * 100;
+                let reward;
+                
+                if (luck < 40) {
+                    reward = Math.floor(Math.random() * 500 + 200);
+                    addLog(`🎁 Получено ${formatNumber(reward)} монет`);
+                } else if (luck < 70) {
+                    reward = Math.floor(Math.random() * 1000 + 500);
+                    addLog(`🎁✨ Повезло! ${formatNumber(reward)} монет!`);
+                } else if (luck < 90) {
+                    reward = Math.floor(Math.random() * 5000 + 2000);
+                    addLog(`🎁🌟 ДЖЕКПОТ! ${formatNumber(reward)} монет!`);
+                } else {
+                    reward = Math.floor(Math.random() * 10000 + 10000);
+                    addLog(`🎁💎 МЕГА ДЖЕКПОТ!!! ${formatNumber(reward)} монет!!!`);
+                }
+                
+                gameState.coins += reward;
+                updateUI();
+            } else {
+                addLog('❌ Нужно 500 монет!');
+            }
+        }
+
+        function openMegaBox() {
+            if (gameState.coins >= 5000) {
+                gameState.coins -= 5000;
+                
+                const luck = Math.random() * 100;
+                let reward;
+                
+                if (luck < 30) {
+                    reward = Math.floor(Math.random() * 5000 + 5000);
+                    addLog(`🎁💎 Получено ${formatNumber(reward)} монет!`);
+                } else if (luck < 60) {
+                    reward = Math.floor(Math.random() * 20000 + 10000);
+                    addLog(`🎁✨ Отлично! ${formatNumber(reward)} монет!`);
+                } else if (luck < 85) {
+                    reward = Math.floor(Math.random() * 50000 + 30000);
+                    addLog(`🎁🌟 СУПЕР ДЖЕКПОТ! ${formatNumber(reward)} монет!`);
+                } else {
+                    reward = Math.floor(Math.random() * 100000 + 100000);
+                    addLog(`🎁💎🔥 УЛЬТРА МЕГА ДЖЕКПОТ!!! ${formatNumber(reward)} монет!!!`);
+                }
+                
+                gameState.coins += reward;
+                updateUI();
+            } else {
+                addLog('❌ Нужно 5,000 монет!');
+            }
+        }
+
+        function buyPrestigePoint() {
+            if (gameState.coins >= 100000) {
+                gameState.coins -= 100000;
+                gameState.prestigeMultiplier += 0.1;
+                addLog(`⭐ Престиж! Множитель: x${gameState.prestigeMultiplier.toFixed(1)}`);
+                updateUI();
+            } else {
+                addLog('❌ Нужно 100,000 монет!');
+            }
+        }
+
+        // Проверка коллекционных предметов
+        function checkCollectibles() {
+            gameState.collectibles.forEach(item => {
+                if (!item.collected && gameState.totalClicks >= item.clicks) {
+                    item.collected = true;
+                    gameState.coins += item.bonus;
+                    addLog(`🏆 ДОСТИЖЕНИЕ: ${item.name}! Бонус: +${formatNumber(item.bonus)}`);
+                    renderCollection();
+                }
+            });
+        }
+
+        // Отображение плавающего текста
+        function showFloatingText(text, x, y, color = '#FFD700') {
+            const floatingText = document.createElement('div');
+            floatingText.className = 'floating-text';
+            floatingText.textContent = text;
+            floatingText.style.left = x + 'px';
+            floatingText.style.top = y + 'px';
+            floatingText.style.color = color;
+            document.body.appendChild(floatingText);
+            
+            setTimeout(() => {
+                floatingText.remove();
+            }, 1000);
+        }
+
+        // Создание частиц
+        function createParticles(x, y, count) {
+            for (let i = 0; i < count; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.textContent = ['💎', '✨', '⭐', '💫'][Math.floor(Math.random() * 4)];
+                particle.style.left = x + 'px';
+                particle.style.top = y + 'px';
+                particle.style.fontSize = (Math.random() * 20 + 10) + 'px';
+                
+                const tx = (Math.random() - 0.5) * 200;
+                const ty = (Math.random() - 0.5) * 200;
+                particle.style.setProperty('--tx', tx + 'px');
+                particle.style.setProperty('--ty', ty + 'px');
+                
+                document.body.appendChild(particle);
+                
+                setTimeout(() => {
+                    particle.remove();
+                }, 2000);
+            }
+        }
+
+        // Переключение вкладок
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        // Рендеринг улучшений
+        function renderUpgrades() {
+            const container = document.getElementById('upgrades');
+            container.innerHTML = '';
+            
+            gameState.upgrades.forEach(upgrade => {
+                const price = Math.floor(upgrade.basePrice * Math.pow(1.5, upgrade.level));
+                const canBuy = gameState.coins >= price;
+                
+                const div = document.createElement('div');
+                div.className = `upgrade-item ${!canBuy ? 'locked' : ''}`;
+                div.onclick = () => buyUpgrade(upgrade.id);
+                
+                div.innerHTML = `
+                    <div class="item-name">${upgrade.name} <span class="item-count">Ур. ${upgrade.level}</span></div>
+                    <div class="item-description">${upgrade.desc}</div>
+                    <div class="item-price">💰 ${formatNumber(price)}</div>
+                `;
+                
+                container.appendChild(div);
+            });
+        }
+
+        // Рендеринг автокликеров
+        function renderAutoClickers() {
+            const container = document.getElementById('autoclickers');
+            container.innerHTML = '';
+            
+            gameState.autoClickers.forEach(auto => {
+                const price = Math.floor(auto.basePrice * Math.pow(1.15, auto.count));
+                const canBuy = gameState.coins >= price;
+                
+                const div = document.createElement('div');
+                div.className = `autoclicker-item ${!canBuy ? 'locked' : ''}`;
+                div.onclick = () => buyAutoClicker(auto.id);
+                
+                div.innerHTML = `
+                    <div class="item-name">${auto.name} <span class="item-count">x${auto.count}</span></div>
+                    <div class="item-description">+${formatNumber(auto.cps * auto.count)} монет/сек</div>
+                    <div class="item-price">💰 ${formatNumber(price)}</div>
+                `;
+                
+                container.appendChild(div);
+            });
+        }
+
+        // Рендеринг коллекции
+        function renderCollection() {
+            const container = document.getElementById('collection');
+            container.innerHTML = '';
+            
+            gameState.collectibles.forEach(item => {
+                const div = document.createElement('div');
+                div.className = `collectible-item ${item.collected ? 'collected' : 'locked'}`;
+                
+                if (item.collected) {
+                    div.innerHTML = `
+                        <span>✅ ${item.name}</span>
+                        <span style="color: #00FF00;">+${formatNumber(item.bonus)}</span>
+                    `;
+                } else {
+                    div.innerHTML = `
+                        <span>🔒 ???</span>
+                        <span style="color: #888;">${gameState.totalClicks}/${item.clicks}</span>
+                    `;
+                }
+                
+                container.appendChild(div);
+            });
+        }
+
+        // Отображение активных бафов
+        function renderActiveBuffs() {
+            const container = document.getElementById('activeBuffs');
+            container.innerHTML = '';
+            
+            if (gameState.goldenClickActive) {
+                const div = document.createElement('div');
+                div.className = 'buff-timer';
+                div.innerHTML = `
+                    🌟 Золотой клик: ${gameState.goldenClickTimer}с
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${(gameState.goldenClickTimer / 10) * 100}%"></div>
+                    </div>
+                `;
+                container.appendChild(div);
+            }
+            
+            if (gameState.megaCritActive) {
+                const div = document.createElement('div');
+                div.className = 'buff-timer';
+                div.innerHTML = `
+                    ⚡ Мега крит: ${gameState.megaCritTimer}с
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${(gameState.megaCritTimer / 5) * 100}%"></div>
+                    </div>
+                `;
+                container.appendChild(div);
+            }
+            
+            if (gameState.frenzyActive) {
+                const div = document.createElement('div');
+                div.className = 'buff-timer';
+                div.innerHTML = `
+                    🔥 Безумие: ${gameState.frenzyTimer}с
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${(gameState.frenzyTimer / 20) * 100}%"></div>
+                    </div>
+                `;
+                container.appendChild(div);
+            }
+        }
+
+        // Добавление лога
+        function addLog(message) {
+            const logArea = document.getElementById('logArea');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logArea.insertBefore(entry, logArea.firstChild);
+            
+            // Ограничение количества записей
+            while (logArea.children.length > 50) {
+                logArea.removeChild(logArea.lastChild);
+            }
+        }
+
+        // Форматирование чисел
+        function formatNumber(num) {
+            if (num >= 1e12) return (num / 1e12).toFixed(2) + 'T';
+            if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
+            if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
+            if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
+            return Math.floor(num).toString();
+        }
+
+        // Обновление UI
+        function updateUI() {
+            document.getElementById('coinsDisplay').textContent = formatNumber(gameState.coins);
+            document.getElementById('cpsDisplay').textContent = formatNumber(gameState.coinsPerSecond * gameState.prestigeMultiplier);
+            document.getElementById('clickPowerDisplay').textContent = formatNumber(gameState.clickPower * gameState.prestigeMultiplier);
+            document.getElementById('clicksDisplay').textContent = formatNumber(gameState.totalClicks);
+            
+            renderActiveBuffs();
+        }
+
+        // Игровой цикл
+        function gameLoop() {
+            // Автоматический доход
+            if (gameState.coinsPerSecond > 0) {
+                gameState.coins += (gameState.coinsPerSecond * gameState.prestigeMultiplier) / 10;
+            }
+            
+            // Обновление бафов
+            if (gameState.goldenClickActive) {
+                gameState.goldenClickTimer -= 0.1;
+                if (gameState.goldenClickTimer <= 0) {
+                    gameState.goldenClickActive = false;
+                    addLog('🌟 Золотой клик закончился');
+                }
+            }
+            
+            if (gameState.megaCritActive) {
+                gameState.megaCritTimer -= 0.1;
+                if (gameState.megaCritTimer <= 0) {
+                    gameState.megaCritActive = false;
+                    addLog('⚡ Мега крит закончился');
+                }
+            }
+            
+            if (gameState.frenzyActive) {
+                gameState.frenzyTimer -= 0.1;
+                if (gameState.frenzyTimer <= 0) {
+                    gameState.frenzyActive = false;
+                    calculateCPS();
+                    addLog('🔥 Безумие закончилось');
+                }
+            }
+            
+            updateUI();
+        }
+
+        // Инициализация
+        initUpgrades();
+        renderUpgrades();
+        renderAutoClickers();
+        renderCollection();
+        updateUI();
+
+        // Запуск игрового цикла
+        setInterval(gameLoop, 100);
+
+        // Сохранение прогресса каждые 10 секунд
+        setInterval(() => {
+            localStorage.setItem('clickerGameSave', JSON.stringify(gameState));
+        }, 10000);
+
+        // Загрузка сохранения при запуске
+        window.addEventListener('load', () => {
+            const saved = localStorage.getItem('clickerGameSave');
+            if (saved) {
+                const savedState = JSON.parse(saved);
+                Object.assign(gameState, savedState);
+                calculateClickPower();
+                calculateCPS();
+                renderUpgrades();
+                renderAutoClickers();
+                renderCollection();
+                updateUI();
+                addLog('💾 Прогресс загружен!');
+            }
+        });
+
+        console.log('💎 Epic Clicker Game загружена! Удачи!');
+    </script>
+</body>
+</html>

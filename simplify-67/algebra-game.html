@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Упрости выражение - Игра</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Arial', sans-serif;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+        }
+
+        .info {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #555;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 15px;
+            font-size: 1.2em;
+            margin: 5px;
+        }
+
+        .expression-container {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            min-height: 200px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 1.5em;
+        }
+
+        .term {
+            padding: 12px 20px;
+            background: white;
+            border: 3px solid #ddd;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            user-select: none;
+            font-weight: bold;
+        }
+
+        .term:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .term.selected {
+            background: #ffd700;
+            border-color: #ffaa00;
+            transform: scale(1.1);
+        }
+
+        .term.correct {
+            background: #90EE90;
+            border-color: #32CD32;
+            animation: pulse 0.5s;
+        }
+
+        .term.wrong {
+            background: #FFB6C1;
+            border-color: #FF69B4;
+            animation: shake 0.5s;
+        }
+
+        .term.combined {
+            animation: fadeOut 0.5s forwards;
+        }
+
+        .operator {
+            font-size: 1.5em;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                transform: scale(0);
+            }
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .new-game-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .hint-btn {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: white;
+        }
+
+        .reset-btn {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .message {
+            text-align: center;
+            font-size: 1.3em;
+            margin-top: 20px;
+            min-height: 30px;
+            font-weight: bold;
+        }
+
+        .success {
+            color: #32CD32;
+        }
+
+        .error {
+            color: #FF69B4;
+        }
+
+        .win-message {
+            background: linear-gradient(135deg, #90EE90, #32CD32);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            font-size: 1.5em;
+            text-align: center;
+            margin-top: 20px;
+            animation: pulse 1s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📐 Упрости Алгебраическое Выражение</h1>
+        
+        <div class="info">
+            <p><strong>Правила:</strong> Кликай на пары подобных слагаемых, чтобы объединить их!</p>
+            <p>Подобные слагаемые имеют одинаковую буквенную часть (например: 3x и 5x, -2y и 7y)</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">Осталось: <span id="remaining">0</span></div>
+            <div class="stat-item">Объединено: <span id="combined">0</span></div>
+            <div class="stat-item">Уровень: <span id="level">1</span></div>
+        </div>
+
+        <div class="expression-container" id="expression"></div>
+
+        <div class="message" id="message"></div>
+
+        <div class="buttons">
+            <button class="new-game-btn" onclick="newGame()">Новая игра</button>
+            <button class="hint-btn" onclick="getHint()">Подсказка</button>
+            <button class="reset-btn" onclick="resetSelection()">Сбросить выбор</button>
+        </div>
+    </div>
+
+    <script>
+        let terms = [];
+        let selectedTerms = [];
+        let combinedCount = 0;
+        let level = 1;
+
+        // Генерация случайного выражения
+        function generateExpression(difficulty) {
+            const variables = ['x', 'y', 'z', 'a', 'b'];
+            const numTerms = 8 + difficulty * 2; // Увеличиваем количество слагаемых с уровнем
+            const generatedTerms = [];
+
+            // Создаем пары подобных слагаемых
+            const numPairs = Math.floor(numTerms / 2);
+            
+            for (let i = 0; i < numPairs; i++) {
+                const variable = variables[Math.floor(Math.random() * Math.min(3 + difficulty, variables.length))];
+                const coef1 = Math.floor(Math.random() * 10) + 1;
+                const coef2 = Math.floor(Math.random() * 10) + 1;
+                const sign1 = Math.random() > 0.5 ? 1 : -1;
+                const sign2 = Math.random() > 0.5 ? 1 : -1;
+
+                generatedTerms.push({
+                    coefficient: coef1 * sign1,
+                    variable: variable,
+                    id: Date.now() + Math.random()
+                });
+
+                generatedTerms.push({
+                    coefficient: coef2 * sign2,
+                    variable: variable,
+                    id: Date.now() + Math.random() + 0.1
+                });
+            }
+
+            // Перемешиваем
+            return generatedTerms.sort(() => Math.random() - 0.5);
+        }
+
+        function termToString(term) {
+            const coef = term.coefficient;
+            const absCoef = Math.abs(coef);
+            const sign = coef >= 0 ? '+' : '-';
+            
+            if (absCoef === 1) {
+                return `${sign}${term.variable}`;
+            }
+            return `${sign}${absCoef}${term.variable}`;
+        }
+
+        function renderExpression() {
+            const container = document.getElementById('expression');
+            container.innerHTML = '';
+
+            terms.forEach((term, index) => {
+                if (index > 0) {
+                    const operator = document.createElement('span');
+                    operator.className = 'operator';
+                    operator.textContent = ' ';
+                    container.appendChild(operator);
+                }
+
+                const termElement = document.createElement('div');
+                termElement.className = 'term';
+                termElement.textContent = termToString(term);
+                termElement.dataset.id = term.id;
+                termElement.onclick = () => selectTerm(term);
+                container.appendChild(termElement);
+            });
+
+            updateStats();
+        }
+
+        function selectTerm(term) {
+            const termElement = document.querySelector(`[data-id="${term.id}"]`);
+            
+            if (selectedTerms.includes(term)) {
+                // Отменяем выбор
+                selectedTerms = selectedTerms.filter(t => t !== term);
+                termElement.classList.remove('selected');
+            } else {
+                selectedTerms.push(term);
+                termElement.classList.add('selected');
+
+                if (selectedTerms.length === 2) {
+                    checkCombination();
+                }
+            }
+        }
+
+        function checkCombination() {
+            const [term1, term2] = selectedTerms;
+            
+            if (term1.variable === term2.variable) {
+                // Правильно! Объединяем
+                showMessage('Правильно! Слагаемые подобны! ✓', 'success');
+                
+                const elem1 = document.querySelector(`[data-id="${term1.id}"]`);
+                const elem2 = document.querySelector(`[data-id="${term2.id}"]`);
+                
+                elem1.classList.add('correct');
+                elem2.classList.add('correct');
+
+                setTimeout(() => {
+                    // Создаем новое объединенное слагаемое
+                    const newTerm = {
+                        coefficient: term1.coefficient + term2.coefficient,
+                        variable: term1.variable,
+                        id: Date.now()
+                    };
+
+                    // Удаляем старые и добавляем новое (если коэффициент не 0)
+                    terms = terms.filter(t => t !== term1 && t !== term2);
+                    
+                    if (newTerm.coefficient !== 0) {
+                        terms.push(newTerm);
+                    }
+
+                    combinedCount++;
+                    selectedTerms = [];
+                    renderExpression();
+                    checkWin();
+                }, 500);
+            } else {
+                // Неправильно
+                showMessage('Неправильно! Эти слагаемые не подобны. ✗', 'error');
+                
+                const elem1 = document.querySelector(`[data-id="${term1.id}"]`);
+                const elem2 = document.querySelector(`[data-id="${term2.id}"]`);
+                
+                elem1.classList.add('wrong');
+                elem2.classList.add('wrong');
+
+                setTimeout(() => {
+                    elem1.classList.remove('wrong', 'selected');
+                    elem2.classList.remove('wrong', 'selected');
+                    selectedTerms = [];
+                }, 600);
+            }
+        }
+
+        function checkWin() {
+            // Проверяем, остались ли подобные слагаемые
+            const variableGroups = {};
+            
+            terms.forEach(term => {
+                if (!variableGroups[term.variable]) {
+                    variableGroups[term.variable] = [];
+                }
+                variableGroups[term.variable].push(term);
+            });
+
+            const hasSimilarTerms = Object.values(variableGroups).some(group => group.length > 1);
+
+            if (!hasSimilarTerms && terms.length > 0) {
+                // Победа!
+                const messageDiv = document.getElementById('message');
+                messageDiv.innerHTML = '<div class="win-message">🎉 Поздравляю! Выражение упрощено! 🎉</div>';
+                
+                setTimeout(() => {
+                    if (confirm('Выражение полностью упрощено! Перейти на следующий уровень?')) {
+                        level++;
+                        newGame();
+                    }
+                }, 1000);
+            }
+        }
+
+        function resetSelection() {
+            selectedTerms.forEach(term => {
+                const elem = document.querySelector(`[data-id="${term.id}"]`);
+                if (elem) elem.classList.remove('selected');
+            });
+            selectedTerms = [];
+            showMessage('', '');
+        }
+
+        function getHint() {
+            // Находим пару подобных слагаемых
+            const variableGroups = {};
+            
+            terms.forEach(term => {
+                if (!variableGroups[term.variable]) {
+                    variableGroups[term.variable] = [];
+                }
+                variableGroups[term.variable].push(term);
+            });
+
+            for (let variable in variableGroups) {
+                if (variableGroups[variable].length > 1) {
+                    const pair = variableGroups[variable].slice(0, 2);
+                    showMessage(`💡 Подсказка: Найди слагаемые с переменной "${variable}"`, 'success');
+                    return;
+                }
+            }
+
+            showMessage('Подобных слагаемых больше нет!', 'success');
+        }
+
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${type}`;
+            
+            if (text && type) {
+                setTimeout(() => {
+                    messageDiv.textContent = '';
+                    messageDiv.className = 'message';
+                }, 3000);
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('remaining').textContent = terms.length;
+            document.getElementById('combined').textContent = combinedCount;
+            document.getElementById('level').textContent = level;
+        }
+
+        function newGame() {
+            terms = generateExpression(level);
+            selectedTerms = [];
+            combinedCount = 0;
+            renderExpression();
+            showMessage('', '');
+        }
+
+        // Запуск игры
+        newGame();
+    </script>
+</body>
+</html>

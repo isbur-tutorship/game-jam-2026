@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Кликер Ежик</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 50%, #fbc2eb 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+        }
+
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.3);
+            padding: 40px;
+            border-radius: 30px;
+            box-shadow: 0 8px 32px rgba(255, 105, 180, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            color: #ff1493;
+            font-size: 3em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.5);
+        }
+
+        .score {
+            font-size: 2.5em;
+            color: #ff69b4;
+            margin-bottom: 30px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .click-area {
+            width: 300px;
+            height: 300px;
+            margin: 0 auto;
+            cursor: pointer;
+            transition: transform 0.1s;
+            position: relative;
+        }
+
+        .click-area:active {
+            transform: scale(0.95);
+        }
+
+        .hedgehog {
+            font-size: 200px;
+            user-select: none;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        .click-effect {
+            position: absolute;
+            font-size: 2em;
+            color: #ff1493;
+            font-weight: bold;
+            pointer-events: none;
+            animation: rise 1s ease-out forwards;
+        }
+
+        @keyframes rise {
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-100px);
+            }
+        }
+
+        .stats {
+            margin-top: 30px;
+            color: #ff1493;
+            font-size: 1.2em;
+        }
+
+        .reset-btn {
+            margin-top: 20px;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            background: linear-gradient(135deg, #ff69b4, #ff1493);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 20, 147, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .reset-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 20, 147, 0.6);
+        }
+
+        .reset-btn:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🦔 Кликер Ежик 🦔</h1>
+        <div class="score">Очки: <span id="score">0</span></div>
+        
+        <div class="click-area" id="clickArea">
+            <div class="hedgehog">🦔</div>
+        </div>
+
+        <div class="stats">
+            <p>Кликов в секунду: <span id="cps">0</span></p>
+            <p>Всего кликов: <span id="totalClicks">0</span></p>
+        </div>
+
+        <button class="reset-btn" onclick="resetGame()">Сбросить</button>
+    </div>
+
+    <script>
+        let score = 0;
+        let totalClicks = 0;
+        let clicks = [];
+
+        const scoreElement = document.getElementById('score');
+        const totalClicksElement = document.getElementById('totalClicks');
+        const cpsElement = document.getElementById('cps');
+        const clickArea = document.getElementById('clickArea');
+
+        clickArea.addEventListener('click', (e) => {
+            // Увеличиваем счет
+            score++;
+            totalClicks++;
+            
+            // Обновляем отображение
+            scoreElement.textContent = score;
+            totalClicksElement.textContent = totalClicks;
+
+            // Создаем эффект +1
+            createClickEffect(e.clientX, e.clientY);
+
+            // Записываем время клика для подсчета CPS
+            clicks.push(Date.now());
+            
+            // Удаляем клики старше 1 секунды
+            const now = Date.now();
+            clicks = clicks.filter(time => now - time < 1000);
+            
+            // Обновляем CPS
+            cpsElement.textContent = clicks.length;
+        });
+
+        function createClickEffect(x, y) {
+            const effect = document.createElement('div');
+            effect.className = 'click-effect';
+            effect.textContent = '+1';
+            effect.style.left = x + 'px';
+            effect.style.top = y + 'px';
+            effect.style.position = 'fixed';
+            
+            document.body.appendChild(effect);
+            
+            setTimeout(() => {
+                effect.remove();
+            }, 1000);
+        }
+
+        function resetGame() {
+            if (confirm('Вы уверены, что хотите сбросить игру?')) {
+                score = 0;
+                totalClicks = 0;
+                clicks = [];
+                scoreElement.textContent = 0;
+                totalClicksElement.textContent = 0;
+                cpsElement.textContent = 0;
+            }
+        }
+
+        // Обновление CPS каждые 100мс
+        setInterval(() => {
+            const now = Date.now();
+            clicks = clicks.filter(time => now - time < 1000);
+            cpsElement.textContent = clicks.length;
+        }, 100);
+    </script>
+</body>
+</html>

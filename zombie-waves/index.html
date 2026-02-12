@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧟 3D Зомби Шутер - Магическая Рука</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            overflow: hidden;
+            background: #000;
+            font-family: 'Courier New', monospace;
+        }
+        
+        #gameCanvas {
+            display: block;
+            cursor: none;
+        }
+        
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            font-size: 24px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8), 0 0 10px rgba(0,200,255,0.5);
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            pointer-events: none;
+            z-index: 5;
+        }
+        
+        .crosshair-line {
+            position: absolute;
+            background: rgba(0, 255, 255, 0.8);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+        }
+        
+        .crosshair-h {
+            width: 20px;
+            height: 2px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .crosshair-v {
+            width: 2px;
+            height: 20px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        #startScreen, #gameOver {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.95);
+            padding: 40px;
+            border-radius: 10px;
+            text-align: center;
+            color: white;
+            z-index: 100;
+            border: 2px solid #00ccff;
+            box-shadow: 0 0 30px rgba(0,200,255,0.5);
+        }
+        
+        #gameOver {
+            display: none;
+        }
+        
+        h1 {
+            color: #00ccff;
+            margin-bottom: 20px;
+            font-size: 48px;
+            text-shadow: 0 0 20px rgba(0,200,255,0.8);
+            animation: glow 2s ease-in-out infinite;
+        }
+        
+        @keyframes glow {
+            0%, 100% { text-shadow: 0 0 20px rgba(0,200,255,0.8); }
+            50% { text-shadow: 0 0 40px rgba(0,200,255,1); }
+        }
+        
+        .controls {
+            margin: 20px 0;
+            text-align: left;
+            background: rgba(0,200,255,0.1);
+            padding: 20px;
+            border-radius: 5px;
+            border: 1px solid rgba(0,200,255,0.3);
+        }
+        
+        .controls p {
+            margin: 10px 0;
+            font-size: 18px;
+        }
+        
+        button {
+            padding: 15px 40px;
+            font-size: 24px;
+            background: linear-gradient(45deg, #00ccff, #0099ff);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3), 0 0 20px rgba(0,200,255,0.5);
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+        }
+        
+        button:hover {
+            background: linear-gradient(45deg, #00ffff, #00ccff);
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.4), 0 0 30px rgba(0,255,255,0.8);
+        }
+        
+        #weaponInfo {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            color: white;
+            font-size: 28px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8), 0 0 10px rgba(0,200,255,0.5);
+            pointer-events: none;
+            z-index: 10;
+            text-align: right;
+        }
+        
+        .low-ammo {
+            color: #ff4444 !important;
+            animation: pulse 0.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        #musicIndicator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: #00ffff;
+            font-size: 20px;
+            text-shadow: 0 0 10px rgba(0,255,255,0.8);
+            pointer-events: none;
+            z-index: 10;
+            animation: musicPulse 0.5s ease-in-out infinite;
+        }
+        
+        @keyframes musicPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    
+    <div id="crosshair">
+        <div class="crosshair-line crosshair-h"></div>
+        <div class="crosshair-line crosshair-v"></div>
+    </div>
+    
+    <div id="ui">
+        <div>❤️ Здоровье: <span id="health">100</span></div>
+        <div>💀 Убито: <span id="kills">0</span></div>
+        <div>🌊 Волна: <span id="wave">1</span></div>
+    </div>
+    
+    <div id="weaponInfo">
+        <div>✨ МАГИЧЕСКАЯ РУКА</div>
+        <div id="ammoDisplay">
+            ⚡ Энергия: <span id="ammo">100</span>%
+        </div>
+    </div>
+    
+    <div id="musicIndicator">🎵 MASHERY BASS 🎵</div>
+    
+    <div id="startScreen">
+        <h1>🧟 3D ЗОМБИ ШУТЕР ✨</h1>
+        <h2 style="color: #ffaa00; margin-bottom: 20px;">🚗 BMW EDITION 🚗</h2>
+        <div class="controls">
+            <p><strong>🎮 УПРАВЛЕНИЕ:</strong></p>
+            <p>⌨️ W A S D - Движение</p>
+            <p>🖱️ Мышь - Осмотр</p>
+            <p>✨ ЛКМ - Стрелять энергетическими шарами</p>
+            <p>⚡ Энергия автоматически восстанавливается</p>
+            <p>💥 Мощные магические удары!</p>
+            <p>🚗 Исследуй город с BMW и объектами!</p>
+            <p>🎵 Mashery Bass музыка!</p>
+        </div>
+        <button id="startBtn">НАЧАТЬ ИГРУ</button>
+    </div>
+    
+    <div id="gameOver">
+        <h1>💀 ИГРА ОКОНЧЕНА 💀</h1>
+        <p style="font-size: 24px; margin: 15px 0;">Убито зомби: <span id="finalKills">0</span></p>
+        <p style="font-size: 24px; margin: 15px 0;">Волна: <span id="finalWave">1</span></p>
+        <button id="restartBtn">ИГРАТЬ СНОВА</button>
+    </div>
+    
+    <script src="game.js"></script>
+</body>
+</html>

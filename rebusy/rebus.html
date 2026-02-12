@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Игра Ребусы</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .game-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+        }
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f0f0f0;
+            border-radius: 10px;
+        }
+        .score-item {
+            text-align: center;
+        }
+        .score-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+        .score-value {
+            color: #667eea;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+        .rebus-container {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            border-radius: 15px;
+            margin: 30px 0;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .rebus-display {
+            font-size: 3em;
+            color: white;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+        }
+        .rebus-hint {
+            color: rgba(255,255,255,0.9);
+            font-size: 1em;
+            padding: 10px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            display: none;
+        }
+        #answer-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2em;
+            border: 3px solid #667eea;
+            border-radius: 10px;
+            text-align: center;
+            text-transform: uppercase;
+        }
+        #answer-input:focus {
+            outline: none;
+            border-color: #764ba2;
+            box-shadow: 0 0 20px rgba(102,126,234,0.3);
+        }
+        .button-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        button {
+            flex: 1;
+            padding: 15px;
+            font-size: 1em;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        #check-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        #check-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102,126,234,0.4);
+        }
+        #hint-btn {
+            background: #ffc107;
+            color: white;
+        }
+        #skip-btn {
+            background: #f0f0f0;
+            color: #666;
+        }
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .feedback.show {
+            opacity: 1;
+        }
+        .feedback.correct {
+            background: #4caf50;
+            color: white;
+        }
+        .feedback.incorrect {
+            background: #f44336;
+            color: white;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        .shake {
+            animation: shake 0.5s;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🧩 Ребусы</h1>
+        
+        <div class="score-board">
+            <div class="score-item">
+                <div class="score-label">Счёт</div>
+                <div class="score-value" id="score">0</div>
+            </div>
+            <div class="score-item">
+                <div class="score-label">Уровень</div>
+                <div class="score-value" id="level">1</div>
+            </div>
+            <div class="score-item">
+                <div class="score-label">Подсказки</div>
+                <div class="score-value" id="hints">3</div>
+            </div>
+        </div>
+
+        <div class="rebus-container">
+            <div class="rebus-display" id="rebus-display">7 + Я</div>
+            <div class="rebus-hint" id="rebus-hint">Подсказка</div>
+        </div>
+
+        <input type="text" id="answer-input" placeholder="ВВЕДИТЕ ОТВЕТ" autocomplete="off">
+
+        <div class="button-container">
+            <button id="check-btn">✓ Проверить</button>
+            <button id="hint-btn">💡 Подсказка</button>
+            <button id="skip-btn">→ Пропустить</button>
+        </div>
+
+        <div class="feedback" id="feedback"></div>
+    </div>
+
+    <script>
+        const rebusDatabase = [
+            { rebus: "7 + Я", answer: "СЕМЬЯ", hint: "Число семь + буква Я" },
+            { rebus: "100 + Л", answer: "СТОЛ", hint: "Число сто + буква Л" },
+            { rebus: "40 + А", answer: "СОРОКА", hint: "Число сорок + буква А" },
+            { rebus: "3 + БУНА", answer: "ТРИБУНА", hint: "Число три + БУНА" },
+            { rebus: "С + 3 + Ж", answer: "СТРИЖ", hint: "С + число три + Ж" },
+            { rebus: "ВИ + 3 + НА", answer: "ВИТРИНА", hint: "ВИ + число три + НА" },
+            { rebus: "ПА + 3 + ОТ", answer: "ПАТРИОТ", hint: "ПА + число три + ОТ" },
+            { rebus: "Р + 1 + А", answer: "РОДИНА", hint: "Р + число один + А" },
+            { rebus: "ПО + 100 + ВОЙ", answer: "ПОСТОВОЙ", hint: "ПО + число сто + ВОЙ" },
+            { rebus: "ВО + 7", answer: "ВОСЕМЬ", hint: "ВО + число семь" }
+        ];
+
+        let currentIndex = 0;
+        let score = 0;
+        let hints = 3;
+
+        const rebusDisplay = document.getElementById('rebus-display');
+        const rebusHint = document.getElementById('rebus-hint');
+        const answerInput = document.getElementById('answer-input');
+        const checkBtn = document.getElementById('check-btn');
+        const hintBtn = document.getElementById('hint-btn');
+        const skipBtn = document.getElementById('skip-btn');
+        const feedback = document.getElementById('feedback');
+        const scoreDisplay = document.getElementById('score');
+        const levelDisplay = document.getElementById('level');
+        const hintsDisplay = document.getElementById('hints');
+
+        function loadRebus() {
+            if (currentIndex >= rebusDatabase.length) {
+                showFeedback(`🎉 Игра окончена! Ваш счёт: ${score}`, true);
+                checkBtn.disabled = true;
+                hintBtn.disabled = true;
+                skipBtn.disabled = true;
+                return;
+            }
+
+            const current = rebusDatabase[currentIndex];
+            rebusDisplay.textContent = current.rebus;
+            rebusHint.style.display = 'none';
+            answerInput.value = '';
+            feedback.classList.remove('show');
+            levelDisplay.textContent = currentIndex + 1;
+        }
+
+        function checkAnswer() {
+            const userAnswer = answerInput.value.toUpperCase().trim();
+            const correctAnswer = rebusDatabase[currentIndex].answer;
+
+            if (userAnswer === '') {
+                showFeedback('Введите ответ!', false);
+                return;
+            }
+
+            if (userAnswer === correctAnswer) {
+                score += 10;
+                scoreDisplay.textContent = score;
+                showFeedback('✓ Правильно! +10 очков', true);
+                setTimeout(() => {
+                    currentIndex++;
+                    loadRebus();
+                }, 1500);
+            } else {
+                showFeedback('✗ Неправильно! Попробуйте еще', false);
+                answerInput.classList.add('shake');
+                setTimeout(() => answerInput.classList.remove('shake'), 500);
+            }
+        }
+
+        function showHint() {
+            if (hints > 0) {
+                rebusHint.textContent = '💡 ' + rebusDatabase[currentIndex].hint;
+                rebusHint.style.display = 'block';
+                hints--;
+                hintsDisplay.textContent = hints;
+            } else {
+                showFeedback('⚠️ Подсказки закончились!', false);
+            }
+        }
+
+        function skipRebus() {
+            showFeedback(`⏭️ Ответ: ${rebusDatabase[currentIndex].answer}`, false);
+            setTimeout(() => {
+                currentIndex++;
+                loadRebus();
+            }, 2000);
+        }
+
+        function showFeedback(message, isCorrect) {
+            feedback.textContent = message;
+            feedback.className = 'feedback show ' + (isCorrect ? 'correct' : 'incorrect');
+        }
+
+        checkBtn.addEventListener('click', checkAnswer);
+        hintBtn.addEventListener('click', showHint);
+        skipBtn.addEventListener('click', skipRebus);
+
+        answerInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') checkAnswer();
+        });
+
+        answerInput.focus();
+        loadRebus();
+    </script>
+</body>
+</html>

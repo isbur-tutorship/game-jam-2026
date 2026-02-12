@@ -1,0 +1,36 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    overflow: hidden;
+    font-family: 'Arial', sans-serif;
+}
+
+canvas {
+    display: block;
+}
+
+#info {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    color: #ff3333;
+    font-size: 16px;
+    background: rgba(10, 10, 10, 0.9);
+    padding: 15px;
+    border-radius: 8px;
+    border: 2px solid #660000;
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.3);
+    z-index: 100;
+    font-family: 'Courier New', monospace;
+}
+
+#stats {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #cc3333;
+}

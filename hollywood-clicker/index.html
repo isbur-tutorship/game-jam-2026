@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Голливудская Актёрская Школа с Анджелиной Джоли</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 1200px;
+            width: 100%;
+            padding: 30px;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
+
+        .main-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: #764ba2;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            padding: 20px;
+            border-radius: 15px;
+            color: white;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+
+        .click-area {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .angelina-button {
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            border: 5px solid #764ba2;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            cursor: pointer;
+            transition: all 0.1s;
+            position: relative;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3em;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .angelina-button:hover {
+            transform: scale(1.05);
+        }
+
+        .angelina-button:active {
+            transform: scale(0.95);
+        }
+
+        .angelina-quote {
+            margin-top: 20px;
+            font-style: italic;
+            color: #764ba2;
+            font-size: 1.1em;
+            min-height: 60px;
+        }
+
+        .upgrades-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+        }
+
+        .upgrades-section h2 {
+            color: #764ba2;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .upgrade-item {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border: 2px solid #e0e0e0;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .upgrade-item:hover {
+            border-color: #764ba2;
+            transform: translateX(5px);
+        }
+
+        .upgrade-item.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .upgrade-item.disabled:hover {
+            transform: none;
+            border-color: #e0e0e0;
+        }
+
+        .upgrade-name {
+            font-weight: bold;
+            color: #764ba2;
+            margin-bottom: 5px;
+            font-size: 1.1em;
+        }
+
+        .upgrade-description {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .upgrade-cost {
+            font-weight: bold;
+            color: #f5576c;
+        }
+
+        .upgrade-owned {
+            font-size: 0.8em;
+            color: #667eea;
+            margin-top: 5px;
+        }
+
+        .floating-number {
+            position: absolute;
+            font-size: 2em;
+            font-weight: bold;
+            color: #f5576c;
+            pointer-events: none;
+            animation: float-up 1s ease-out;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        @keyframes float-up {
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-100px);
+            }
+        }
+
+        .achievement-popup {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            animation: slide-in 0.5s ease-out;
+            z-index: 1000;
+            max-width: 300px;
+        }
+
+        @keyframes slide-in {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .level-bar {
+            background: rgba(255, 255, 255, 0.3);
+            height: 30px;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .level-progress {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .game-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="main-section">
+            <div class="header">
+                <h1>🎬 Голливудская Актёрская Школа 🎬</h1>
+                <p>Учись актёрскому мастерству с Анджелиной Джоли!</p>
+            </div>
+
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-label">🎭 Опыт актёрства</div>
+                    <div class="stat-value" id="experience">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">⭐ Уровень</div>
+                    <div class="stat-value" id="level">1</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">💰 Гонорар в секунду</div>
+                    <div class="stat-value" id="perSecond">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">🎯 Сила клика</div>
+                    <div class="stat-value" id="clickPower">1</div>
+                </div>
+            </div>
+
+            <div class="click-area" id="clickArea">
+                <button class="angelina-button" id="angelinaButton">
+                    👩‍🎤
+                </button>
+                <div class="angelina-quote" id="quote">
+                    "Нажми на меня, чтобы начать обучение!"
+                </div>
+                <div class="level-bar">
+                    <div class="level-progress" id="levelProgress" style="width: 0%">
+                        0%
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="upgrades-section">
+            <h2>🎓 Улучшения и Роли</h2>
+            <div id="upgradesList"></div>
+        </div>
+    </div>
+
+    <script>
+        // Игровое состояние
+        let gameState = {
+            experience: 0,
+            level: 1,
+            clickPower: 1,
+            perSecond: 0,
+            upgrades: []
+        };
+
+        // Цитаты Анджелины Джоли
+        const quotes = [
+            "Если ты не рискуешь, ты не живёшь!",
+            "Будь храбрым и не бойся быть собой.",
+            "Я делаю то, что считаю правильным.",
+            "Жизнь коротка, а актёрство вечно!",
+            "Страсть - это энергия жизни!",
+            "Не бойся быть другим!",
+            "Каждая роль - это новая жизнь!",
+            "Искусство требует жертв!",
+            "Голливуд ждёт тебя!",
+            "Ты можешь всё, если веришь в себя!"
+        ];
+
+        // Определение улучшений
+        const upgradeDefinitions = [
+            {
+                id: 'acting-lessons',
+                name: '🎭 Частные уроки актёрства',
+                description: 'Персональные занятия с Анджелиной',
+                baseCost: 10,
+                effect: { perSecond: 1 },
+                costMultiplier: 1.15
+            },
+            {
+                id: 'voice-training',
+                name: '🎤 Тренировка голоса',
+                description: 'Работа над сценической речью',
+                baseCost: 50,
+                effect: { perSecond: 5 },
+                costMultiplier: 1.15
+            },
+            {
+                id: 'movie-role',
+                name: '🎬 Роль в эпизоде',
+                description: 'Маленькая роль в голливудском фильме',
+                baseCost: 100,
+                effect: { clickPower: 2 },
+                costMultiplier: 1.2
+            },
+            {
+                id: 'stunt-training',
+                name: '🤸 Тренировка каскадёра',
+                description: 'Учись выполнять трюки',
+                baseCost: 250,
+                effect: { perSecond: 15 },
+                costMultiplier: 1.15
+            },
+            {
+                id: 'method-acting',
+                name: '🧠 Метод Станиславского',
+                description: 'Глубокое погружение в роль',
+                baseCost: 500,
+                effect: { clickPower: 5 },
+                costMultiplier: 1.2
+            },
+            {
+                id: 'supporting-role',
+                name: '🌟 Роль второго плана',
+                description: 'Заметная роль в блокбастере',
+                baseCost: 1000,
+                effect: { perSecond: 50 },
+                costMultiplier: 1.15
+            },
+            {
+                id: 'director-course',
+                name: '🎥 Курсы режиссуры',
+                description: 'Учись снимать фильмы',
+                baseCost: 2500,
+                effect: { perSecond: 100 },
+                costMultiplier: 1.15
+            },
+            {
+                id: 'lead-role',
+                name: '⭐ Главная роль',
+                description: 'Ты - звезда фильма!',
+                baseCost: 5000,
+                effect: { clickPower: 20 },
+                costMultiplier: 1.2
+            },
+            {
+                id: 'oscar-nomination',
+                name: '🏆 Номинация на Оскар',
+                description: 'Признание киноакадемии',
+                baseCost: 10000,
+                effect: { perSecond: 500 },
+                costMultiplier: 1.15
+            },
+            {
+                id: 'oscar-winner',
+                name: '🏆✨ Победитель Оскара',
+                description: 'Ты получил статуэтку!',
+                baseCost: 50000,
+                effect: { clickPower: 100, perSecond: 1000 },
+                costMultiplier: 1.2
+            },
+            {
+                id: 'hollywood-star',
+                name: '⭐💫 Звезда на Аллее славы',
+                description: 'Твоё имя навечно в истории',
+                baseCost: 100000,
+                effect: { clickPower: 500, perSecond: 5000 },
+                costMultiplier: 1.25
+            }
+        ];
+
+        // Инициализация улучшений
+        upgradeDefinitions.forEach(def => {
+            gameState.upgrades.push({
+                ...def,
+                owned: 0,
+                currentCost: def.baseCost
+            });
+        });
+
+        // Элементы DOM
+        const experienceEl = document.getElementById('experience');
+        const levelEl = document.getElementById('level');
+        const perSecondEl = document.getElementById('perSecond');
+        const clickPowerEl = document.getElementById('clickPower');
+        const angelinaButton = document.getElementById('angelinaButton');
+        const quoteEl = document.getElementById('quote');
+        const clickArea = document.getElementById('clickArea');
+        const upgradesList = document.getElementById('upgradesList');
+        const levelProgress = document.getElementById('levelProgress');
+
+        // Обработчик клика
+        angelinaButton.addEventListener('click', (e) => {
+            gameState.experience += gameState.clickPower;
+            
+            // Показать плавающее число
+            showFloatingNumber(e.clientX, e.clientY, `+${gameState.clickPower}`);
+            
+            // Случайная цитата
+            if (Math.random() < 0.3) {
+                quoteEl.textContent = `"${quotes[Math.floor(Math.random() * quotes.length)]}"`;
+            }
+            
+            updateDisplay();
+            checkLevelUp();
+            saveGame();
+        });
+
+        // Показать плавающее число
+        function showFloatingNumber(x, y, text) {
+            const floatingNumber = document.createElement('div');
+            floatingNumber.className = 'floating-number';
+            floatingNumber.textContent = text;
+            floatingNumber.style.left = x + 'px';
+            floatingNumber.style.top = y + 'px';
+            document.body.appendChild(floatingNumber);
+            
+            setTimeout(() => {
+                floatingNumber.remove();
+            }, 1000);
+        }
+
+        // Проверка повышения уровня
+        function checkLevelUp() {
+            const expForNextLevel = Math.floor(100 * Math.pow(1.5, gameState.level - 1));
+            
+            if (gameState.experience >= expForNextLevel) {
+                gameState.level++;
+                showAchievement(`🎉 Поздравляем! Уровень ${gameState.level}!`, 
+                    'Анджелина гордится твоими успехами!');
+                gameState.clickPower += Math.floor(gameState.level / 2);
+            }
+        }
+
+        // Показать достижение
+        function showAchievement(title, message) {
+            const popup = document.createElement('div');
+            popup.className = 'achievement-popup';
+            popup.innerHTML = `
+                <h3>${title}</h3>
+                <p>${message}</p>
+            `;
+            document.body.appendChild(popup);
+            
+            setTimeout(() => {
+                popup.remove();
+            }, 3000);
+        }
+
+        // Покупка улучшения
+        function buyUpgrade(upgradeId) {
+            const upgrade = gameState.upgrades.find(u => u.id === upgradeId);
+            
+            if (!upgrade || gameState.experience < upgrade.currentCost) {
+                return;
+            }
+            
+            gameState.experience -= upgrade.currentCost;
+            upgrade.owned++;
+            
+            // Применить эффект
+            if (upgrade.effect.clickPower) {
+                gameState.clickPower += upgrade.effect.clickPower;
+            }
+            if (upgrade.effect.perSecond) {
+                gameState.perSecond += upgrade.effect.perSecond;
+            }
+            
+            // Увеличить стоимость
+            upgrade.currentCost = Math.floor(upgrade.baseCost * Math.pow(upgrade.costMultiplier, upgrade.owned));
+            
+            updateDisplay();
+            renderUpgrades();
+            saveGame();
+            
+            // Показать сообщение
+            if (upgrade.owned === 1) {
+                showAchievement(`✨ Новое достижение!`, upgrade.name);
+            }
+        }
+
+        // Отрисовка улучшений
+        function renderUpgrades() {
+            upgradesList.innerHTML = '';
+            
+            gameState.upgrades.forEach(upgrade => {
+                const canAfford = gameState.experience >= upgrade.currentCost;
+                const upgradeEl = document.createElement('div');
+                upgradeEl.className = `upgrade-item ${!canAfford ? 'disabled' : ''}`;
+                upgradeEl.innerHTML = `
+                    <div class="upgrade-name">${upgrade.name}</div>
+                    <div class="upgrade-description">${upgrade.description}</div>
+                    <div class="upgrade-cost">💰 Стоимость: ${formatNumber(upgrade.currentCost)}</div>
+                    ${upgrade.owned > 0 ? `<div class="upgrade-owned">Куплено: ${upgrade.owned}</div>` : ''}
+                `;
+                
+                upgradeEl.addEventListener('click', () => buyUpgrade(upgrade.id));
+                upgradesList.appendChild(upgradeEl);
+            });
+        }
+
+        // Форматирование числа
+        function formatNumber(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return Math.floor(num).toString();
+        }
+
+        // Обновление отображения
+        function updateDisplay() {
+            experienceEl.textContent = formatNumber(gameState.experience);
+            levelEl.textContent = gameState.level;
+            perSecondEl.textContent = formatNumber(gameState.perSecond);
+            clickPowerEl.textContent = formatNumber(gameState.clickPower);
+            
+            // Прогресс уровня
+            const expForNextLevel = Math.floor(100 * Math.pow(1.5, gameState.level - 1));
+            const progress = Math.min(100, (gameState.experience / expForNextLevel) * 100);
+            levelProgress.style.width = progress + '%';
+            levelProgress.textContent = Math.floor(progress) + '%';
+        }
+
+        // Пассивный доход
+        setInterval(() => {
+            if (gameState.perSecond > 0) {
+                gameState.experience += gameState.perSecond / 10;
+                updateDisplay();
+                checkLevelUp();
+            }
+        }, 100);
+
+        // Автосохранение
+        setInterval(() => {
+            saveGame();
+        }, 30000);
+
+        // Сохранение игры
+        function saveGame() {
+            localStorage.setItem('hollywoodActorGame', JSON.stringify(gameState));
+        }
+
+        // Загрузка игры
+        function loadGame() {
+            const saved = localStorage.getItem('hollywoodActorGame');
+            if (saved) {
+                const savedState = JSON.parse(saved);
+                gameState.experience = savedState.experience || 0;
+                gameState.level = savedState.level || 1;
+                gameState.clickPower = savedState.clickPower || 1;
+                gameState.perSecond = savedState.perSecond || 0;
+                
+                // Восстановить улучшения
+                if (savedState.upgrades) {
+                    savedState.upgrades.forEach((savedUpgrade, index) => {
+                        if (gameState.upgrades[index]) {
+                            gameState.upgrades[index].owned = savedUpgrade.owned || 0;
+                            gameState.upgrades[index].currentCost = savedUpgrade.currentCost || gameState.upgrades[index].baseCost;
+                        }
+                    });
+                }
+            }
+        }
+
+        // Инициализация игры
+        function init() {
+            loadGame();
+            updateDisplay();
+            renderUpgrades();
+            
+            // Приветствие
+            setTimeout(() => {
+                showAchievement('🎬 Добро пожаловать в Голливуд!', 
+                    'Начни своё путешествие к славе вместе с Анджелиной Джоли!');
+            }, 500);
+        }
+
+        init();
+    </script>
+</body>
+</html>

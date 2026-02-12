@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VANYA_L0X - Приключения Рыбы-Капли</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <header class="game-header">
+            <h1>🐟 VANYA_L0X: Рыба-Капля 🐟</h1>
+            <div class="stats-panel">
+                <div class="stat">
+                    <span class="stat-icon">💰</span>
+                    <span class="stat-label">Монеты:</span>
+                    <span id="coins" class="stat-value">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-icon">⭐</span>
+                    <span class="stat-label">Очки:</span>
+                    <span id="score" class="stat-value">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-icon">🎒</span>
+                    <span class="stat-label">Предметов:</span>
+                    <span id="items-count" class="stat-value">0</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="game-content">
+            <!-- Игровая область -->
+            <div class="game-area">
+                <canvas id="gameCanvas" width="600" height="400"></canvas>
+                <div class="controls-hint">
+                    <p>🎮 Управление: ← → ↑ ↓ или WASD | ПРОБЕЛ - взаимодействие</p>
+                </div>
+            </div>
+
+            <!-- Боковая панель -->
+            <div class="sidebar">
+                <!-- Магазин лутбоксов -->
+                <div class="panel lootbox-panel">
+                    <h2>🎁 Магазин Лутбоксов</h2>
+                    <div class="lootbox-item">
+                        <div class="lootbox-icon common">📦</div>
+                        <div class="lootbox-info">
+                            <h3>Обычный Ящик</h3>
+                            <p>💰 50 монет</p>
+                            <button onclick="game.openLootbox('common')" class="btn btn-common">Открыть</button>
+                        </div>
+                    </div>
+                    <div class="lootbox-item">
+                        <div class="lootbox-icon rare">✨</div>
+                        <div class="lootbox-info">
+                            <h3>Редкий Ящик</h3>
+                            <p>💰 150 монет</p>
+                            <button onclick="game.openLootbox('rare')" class="btn btn-rare">Открыть</button>
+                        </div>
+                    </div>
+                    <div class="lootbox-item">
+                        <div class="lootbox-icon legendary">💎</div>
+                        <div class="lootbox-info">
+                            <h3>Легендарный Ящик</h3>
+                            <p>💰 500 монет</p>
+                            <button onclick="game.openLootbox('legendary')" class="btn btn-legendary">Открыть</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Инвентарь -->
+                <div class="panel inventory-panel">
+                    <h2>🎒 Инвентарь</h2>
+                    <div id="inventory" class="inventory-grid"></div>
+                </div>
+
+                <!-- Лог событий -->
+                <div class="panel log-panel">
+                    <h2>📜 События</h2>
+                    <div id="event-log" class="event-log"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для награды из лутбокса -->
+    <div id="reward-modal" class="modal">
+        <div class="modal-content">
+            <h2>🎉 Награда!</h2>
+            <div id="reward-display" class="reward-display"></div>
+            <button onclick="game.closeRewardModal()" class="btn btn-primary">Забрать!</button>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>

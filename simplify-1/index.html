@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Упрости алгебраическое выражение</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Упрости алгебраическое выражение</h1>
+        
+        <div class="game-info">
+            <div class="level">Уровень: <span id="level">1</span></div>
+            <div class="score">Очки: <span id="score">0</span></div>
+            <div class="moves">Ходы: <span id="moves">0</span></div>
+        </div>
+
+        <div class="instructions">
+            Кликай на два подобных слагаемых, чтобы объединить их!
+        </div>
+
+        <div id="expression" class="expression"></div>
+
+        <div class="controls">
+            <button id="resetBtn">Сбросить выбор</button>
+            <button id="newGameBtn">Новая игра</button>
+            <button id="hintBtn">Подсказка</button>
+        </div>
+
+        <div id="message" class="message"></div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>

@@ -1,0 +1,1305 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 Брейнрот Паркур Игра</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            overflow: hidden;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Comic Sans MS', 'Arial', sans-serif;
+        }
+
+                #gameCanvas {
+            display: block;
+            margin: 0 auto;
+            margin-top: 10px;
+            background: #87CEEB;
+            border: 5px solid #ff00ff;
+            box-shadow: 0 0 30px rgba(255, 0, 255, 0.7);
+            image-rendering: pixelated;
+        }
+
+                #ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            font-size: 14px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.7);
+            padding: 10px;
+            border-radius: 8px;
+            border: 2px solid #FFD700;
+        }
+
+                #inventory {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: white;
+            background: rgba(0,0,0,0.7);
+            padding: 8px;
+            border-radius: 8px;
+            min-width: 160px;
+            border: 2px solid #00FF00;
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+
+                .item {
+            margin: 4px 0;
+            padding: 4px;
+            background: linear-gradient(90deg, rgba(255,0,255,0.3), rgba(0,255,255,0.3));
+            border-radius: 5px;
+            border: 1px solid rgba(255,255,255,0.3);
+            animation: glow 2s ease-in-out infinite;
+            font-size: 11px;
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 5px rgba(255,255,255,0.5); }
+            50% { box-shadow: 0 0 15px rgba(255,255,0,0.8); }
+        }
+
+        #notification {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #000;
+            padding: 30px 50px;
+            border-radius: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            display: none;
+            animation: popup 0.5s ease;
+            box-shadow: 0 0 40px rgba(255,215,0,0.9);
+            border: 4px solid #FF1493;
+            z-index: 1000;
+        }
+
+        @keyframes popup {
+            0% { transform: translate(-50%, -50%) scale(0) rotate(-180deg); }
+            50% { transform: translate(-50%, -50%) scale(1.2) rotate(10deg); }
+            100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+        }
+
+                        #controls {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            color: white;
+            background: rgba(0,0,0,0.8);
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 12px;
+            border: 2px solid #00FFFF;
+            max-width: 240px;
+        }
+
+                #musicControl {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(255,0,255,0.8);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 2px solid #FFD700;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        #musicControl:hover {
+            background: rgba(255,0,255,1);
+            transform: scale(1.1);
+        }
+
+        .rainbow-text {
+            background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #8b00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: rainbow 3s linear infinite;
+        }
+
+                @keyframes rainbow {
+            0% { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(360deg); }
+        }
+
+                        #characterSelect {
+            position: absolute;
+            top: 120px;
+            left: 10px;
+            background: rgba(0,0,0,0.8);
+            padding: 8px;
+            border-radius: 8px;
+            border: 2px solid #FF69B4;
+            color: white;
+            max-width: 150px;
+        }
+
+                .character-btn {
+            font-size: 20px;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid #FFD700;
+            border-radius: 5px;
+            padding: 3px;
+            margin: 2px;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .character-btn:hover {
+            transform: scale(1.15);
+            background: rgba(255,255,255,0.4);
+        }
+
+        .character-btn.selected {
+            border: 3px solid #00FF00;
+            background: rgba(0,255,0,0.3);
+            box-shadow: 0 0 15px #00FF00;
+        }
+
+                        #musicSelect {
+            position: absolute;
+            top: 220px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            padding: 8px;
+            border-radius: 8px;
+            border: 2px solid #00FFFF;
+            color: white;
+            max-width: 160px;
+        }
+
+                .music-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: 1px solid #FFD700;
+            padding: 4px 8px;
+            margin: 2px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            font-size: 11px;
+        }
+
+        .music-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(255,215,0,0.8);
+        }
+
+        .music-btn.active {
+            background: linear-gradient(135deg, #00FF00, #00AA00);
+            box-shadow: 0 0 20px #00FF00;
+        }
+
+                #themeSelect {
+            position: absolute;
+            top: 350px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            padding: 8px;
+            border-radius: 8px;
+            border: 2px solid #FF69B4;
+            color: white;
+            max-width: 160px;
+        }
+
+                .theme-btn {
+            border: 2px solid #FFF;
+            padding: 4px;
+            margin: 2px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            font-size: 10px;
+            width: 70px;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .theme-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(255,255,255,0.8);
+        }
+
+        .theme-btn.active {
+            border: 4px solid #FFD700;
+            box-shadow: 0 0 25px #FFD700;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="1400" height="800"></canvas>
+    
+        <div id="ui">
+        <div class="rainbow-text" style="font-size: 16px; margin-bottom: 5px;">🔥 ПАРКУР 🔥</div>
+        <div>💰 <span id="coins">0</span></div>
+        <div>⭐ <span id="stars">0</span></div>
+        <div>💎 <span id="diamonds">0</span></div>
+        <div>🎁 <span id="lootboxes">0</span></div>
+        <div>📊 Lvl <span id="level">1</span></div>
+        <div>🏆 <span id="score">0</span></div>
+    </div>
+
+        <div id="inventory">
+        <h4 style="text-align: center; margin: 0 0 5px 0; font-size: 13px;">🎒 ИНВ.</h4>
+        <div id="itemsList"></div>
+    </div>
+
+    <div id="notification"></div>
+
+            <div id="controls">
+        <strong>🎮 УПРАВЛЕНИЕ:</strong><br>
+        W/SPACE - Прыжок 🚀<br>
+        A - Влево ⬅️ | D - Вправо ➡️<br>
+        E - Лутбокс 🎁 | R - Супер 💫<br>
+        <strong style="color: #FFD700;">🏁 Дойди до финиша!</strong>
+    </div>
+
+    <div id="musicControl" onclick="toggleMusic()">🎵 МУЗЫКА: ВКЛ</div>
+
+                <div id="characterSelect">
+        <h4 style="text-align: center; margin-bottom: 4px; font-size: 12px;">🎭 СКИН</h4>
+        <div style="display: flex; flex-wrap: wrap; gap: 3px; justify-content: center;">
+            <button class="character-btn selected" data-emoji="🤖" data-color="#FF1493">🤖</button>
+            <button class="character-btn" data-emoji="👾" data-color="#9B59B6">👾</button>
+            <button class="character-btn" data-emoji="🐱" data-color="#E74C3C">🐱</button>
+            <button class="character-btn" data-emoji="🦄" data-color="#3498DB">🦄</button>
+            <button class="character-btn" data-emoji="🐉" data-color="#2ECC71">🐉</button>
+            <button class="character-btn" data-emoji="🦖" data-color="#F39C12">🦖</button>
+            <button class="character-btn" data-emoji="🚀" data-color="#1ABC9C">🚀</button>
+            <button class="character-btn" data-emoji="⚡" data-color="#F1C40F">⚡</button>
+        </div>
+    </div>
+
+            <div id="musicSelect">
+        <h4 style="margin-bottom: 4px; text-align: center; font-size: 11px;">🎵 ТРЕК</h4>
+        <button class="music-btn active" data-track="brainrot">Брейнрот</button>
+        <button class="music-btn" data-track="phonk">Phonk</button>
+        <button class="music-btn" data-track="skibidi">Skibidi</button>
+        <button class="music-btn" data-track="sigma">Sigma</button>
+        <button class="music-btn" data-track="epic">Epic</button>
+        <button class="music-btn" data-track="chill">Chill</button>
+    </div>
+
+        <div id="themeSelect">
+        <h4 style="margin-bottom: 4px; text-align: center; font-size: 11px;">🎨 ТЕМА</h4>
+        <button class="theme-btn active" data-theme="default" style="background: linear-gradient(135deg, #87CEEB, #E0F6FF); color: #000;">Небо ☁️</button>
+        <button class="theme-btn" data-theme="dark" style="background: linear-gradient(135deg, #1a1a2e, #16213e); color: #fff;">Тьма 🌑</button>
+        <button class="theme-btn" data-theme="sunset" style="background: linear-gradient(135deg, #FF6B6B, #FFD93D); color: #000;">Закат 🌅</button>
+        <button class="theme-btn" data-theme="ocean" style="background: linear-gradient(135deg, #0077BE, #00D4FF); color: #fff;">Океан 🌊</button>
+        <button class="theme-btn" data-theme="forest" style="background: linear-gradient(135deg, #2d5016, #76b947); color: #fff;">Лес 🌲</button>
+        <button class="theme-btn" data-theme="purple" style="background: linear-gradient(135deg, #6B46C1, #D946EF); color: #fff;">Пурпур 💜</button>
+        <button class="theme-btn" data-theme="neon" style="background: linear-gradient(135deg, #000, #FF00FF); color: #0FF;">Неон 🌈</button>
+        <button class="theme-btn" data-theme="space" style="background: linear-gradient(135deg, #000428, #004e92); color: #fff;">Космос 🌌</button>
+    </div>
+
+    <script>
+                // Ждём загрузки DOM
+        window.addEventListener('DOMContentLoaded', initGame);
+
+        function initGame() {
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        console.log('🎮 Инициализация игры...', canvas);
+
+        // Аудио контекст для брейнрот музыки
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        let musicPlaying = false;
+        let oscillators = [];
+        let gainNode = null;
+
+                // Музыкальные треки
+        const musicTracks = {
+            brainrot: [
+                { freq: 329.63, duration: 200 },  // E4
+                { freq: 293.66, duration: 200 },  // D4
+                { freq: 261.63, duration: 200 },  // C4
+                { freq: 293.66, duration: 200 },  // D4
+                { freq: 329.63, duration: 400 },  // E4
+                { freq: 329.63, duration: 400 },  // E4
+                { freq: 329.63, duration: 400 },  // E4
+                { freq: 293.66, duration: 200 },  // D4
+                { freq: 293.66, duration: 200 },  // D4
+                { freq: 293.66, duration: 400 },  // D4
+                { freq: 329.63, duration: 200 },  // E4
+                { freq: 392.00, duration: 200 },  // G4
+                { freq: 392.00, duration: 400 },  // G4
+            ],
+            phonk: [
+                { freq: 130.81, duration: 150 },  // C3
+                { freq: 130.81, duration: 150 },  // C3
+                { freq: 196.00, duration: 150 },  // G3
+                { freq: 130.81, duration: 150 },  // C3
+                { freq: 174.61, duration: 300 },  // F3
+                { freq: 164.81, duration: 300 },  // E3
+                { freq: 130.81, duration: 150 },  // C3
+                { freq: 146.83, duration: 150 },  // D3
+            ],
+            skibidi: [
+                { freq: 261.63, duration: 150 },  // C4
+                { freq: 293.66, duration: 150 },  // D4
+                { freq: 329.63, duration: 150 },  // E4
+                { freq: 261.63, duration: 150 },  // C4
+                { freq: 293.66, duration: 150 },  // D4
+                { freq: 329.63, duration: 150 },  // E4
+                { freq: 392.00, duration: 300 },  // G4
+                { freq: 349.23, duration: 300 },  // F4
+            ],
+                        sigma: [
+                { freq: 220.00, duration: 200 },  // A3
+                { freq: 246.94, duration: 200 },  // B3
+                { freq: 277.18, duration: 200 },  // C#4
+                { freq: 293.66, duration: 200 },  // D4
+                { freq: 329.63, duration: 400 },  // E4
+                { freq: 293.66, duration: 200 },  // D4
+                { freq: 277.18, duration: 200 },  // C#4
+                { freq: 246.94, duration: 400 },  // B3
+            ],
+            epic: [
+                { freq: 261.63, duration: 300 },  // C4
+                { freq: 329.63, duration: 300 },  // E4
+                { freq: 392.00, duration: 300 },  // G4
+                { freq: 523.25, duration: 300 },  // C5
+                { freq: 392.00, duration: 300 },  // G4
+                { freq: 329.63, duration: 300 },  // E4
+                { freq: 261.63, duration: 600 },  // C4
+            ],
+            chill: [
+                { freq: 220.00, duration: 400 },  // A3
+                { freq: 261.63, duration: 400 },  // C4
+                { freq: 293.66, duration: 400 },  // D4
+                { freq: 329.63, duration: 400 },  // E4
+                { freq: 293.66, duration: 400 },  // D4
+                { freq: 261.63, duration: 400 },  // C4
+                { freq: 220.00, duration: 800 },  // A3
+            ]
+        };
+        
+                let currentTrack = 'brainrot';
+        let brainrotMelody = musicTracks[currentTrack];
+        
+        // Темы игры
+        const gameThemes = {
+            default: {
+                sky: ['#87CEEB', '#E0F6FF'],
+                ground: '#2C3E50',
+                platforms: ['#E74C3C', '#3498DB', '#2ECC71', '#F39C12', '#9B59B6', '#1ABC9C', '#F1C40F', '#E67E22', '#16A085', '#8E44AD', '#C0392B'],
+                clouds: 'rgba(255, 255, 255, 0.7)'
+            },
+            dark: {
+                sky: ['#1a1a2e', '#16213e'],
+                ground: '#0f0f0f',
+                platforms: ['#8B0000', '#191970', '#006400', '#FF8C00', '#4B0082', '#008080', '#FFD700', '#8B4513', '#2F4F4F', '#483D8B', '#8B0000'],
+                clouds: 'rgba(100, 100, 100, 0.3)'
+            },
+            sunset: {
+                sky: ['#FF6B6B', '#FFD93D'],
+                ground: '#8B4513',
+                platforms: ['#FF1744', '#FF6F00', '#FFAB00', '#F57C00', '#D84315', '#C62828', '#AD1457', '#6A1B9A', '#4A148C', '#311B92', '#1A237E'],
+                clouds: 'rgba(255, 200, 150, 0.6)'
+            },
+            ocean: {
+                sky: ['#0077BE', '#00D4FF'],
+                ground: '#1B5E20',
+                platforms: ['#006064', '#00838F', '#0097A7', '#00ACC1', '#00BCD4', '#26C6DA', '#4DD0E1', '#80DEEA', '#B2EBF2', '#006064', '#00838F'],
+                clouds: 'rgba(255, 255, 255, 0.8)'
+            },
+            forest: {
+                sky: ['#2d5016', '#76b947'],
+                ground: '#1B5E20',
+                platforms: ['#33691E', '#558B2F', '#689F38', '#7CB342', '#8BC34A', '#9CCC65', '#AED581', '#C5E1A5', '#33691E', '#558B2F', '#689F38'],
+                clouds: 'rgba(200, 255, 200, 0.5)'
+            },
+            purple: {
+                sky: ['#6B46C1', '#D946EF'],
+                ground: '#4A148C',
+                platforms: ['#4A148C', '#6A1B9A', '#7B1FA2', '#8E24AA', '#9C27B0', '#AB47BC', '#BA68C8', '#CE93D8', '#E1BEE7', '#4A148C', '#6A1B9A'],
+                clouds: 'rgba(255, 200, 255, 0.6)'
+            },
+            neon: {
+                sky: ['#000000', '#1a0033'],
+                ground: '#000',
+                platforms: ['#FF00FF', '#00FFFF', '#FF00AA', '#00FF00', '#FFFF00', '#FF0066', '#0099FF', '#FF6600', '#FF00FF', '#00FFFF', '#00FF00'],
+                clouds: 'rgba(0, 255, 255, 0.3)'
+            },
+            space: {
+                sky: ['#000428', '#004e92'],
+                ground: '#0a0a0a',
+                platforms: ['#1e3a8a', '#312e81', '#4c1d95', '#581c87', '#6b21a8', '#7c2d12', '#991b1b', '#1e3a8a', '#312e81', '#4c1d95', '#581c87'],
+                clouds: 'rgba(200, 200, 255, 0.2)'
+            }
+        };
+        
+        let currentTheme = 'default';
+
+        function playBrainrotMusic() {
+            if (musicPlaying) return;
+            
+            gainNode = audioContext.createGain();
+            gainNode.gain.value = 0.15;
+            gainNode.connect(audioContext.destination);
+            
+            let currentTime = audioContext.currentTime;
+            let melodyIndex = 0;
+            
+            function playNextNote() {
+                if (!musicPlaying) return;
+                
+                const note = brainrotMelody[melodyIndex];
+                const osc = audioContext.createOscillator();
+                const noteGain = audioContext.createGain();
+                
+                osc.type = 'square'; // Брейнрот звук
+                osc.frequency.value = note.freq;
+                
+                noteGain.gain.setValueAtTime(0.3, currentTime);
+                noteGain.gain.exponentialRampToValueAtTime(0.01, currentTime + note.duration / 1000);
+                
+                osc.connect(noteGain);
+                noteGain.connect(gainNode);
+                
+                osc.start(currentTime);
+                osc.stop(currentTime + note.duration / 1000);
+                
+                currentTime += note.duration / 1000;
+                melodyIndex = (melodyIndex + 1) % brainrotMelody.length;
+                
+                setTimeout(playNextNote, note.duration);
+            }
+            
+                        musicPlaying = true;
+            brainrotMelody = musicTracks[currentTrack];
+            playNextNote();
+        }
+
+                        // Выбор музыки
+        document.querySelectorAll('.music-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                const track = this.getAttribute('data-track');
+                currentTrack = track;
+                
+                // Обновляем кнопки
+                document.querySelectorAll('.music-btn').forEach(b => {
+                    b.classList.remove('active');
+                });
+                this.classList.add('active');
+                
+                // Перезапускаем музыку
+                if (musicPlaying) {
+                    musicPlaying = false;
+                    if (gainNode) gainNode.gain.value = 0;
+                    setTimeout(() => {
+                        audioContext.resume().then(() => {
+                            playBrainrotMusic();
+                        });
+                    }, 100);
+                }
+                
+                showNotification(`🎵 Трек: ${track.toUpperCase()}!`);
+            });
+        });
+        
+        // Выбор темы
+        document.querySelectorAll('.theme-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                const theme = this.getAttribute('data-theme');
+                currentTheme = theme;
+                
+                // Обновляем кнопки
+                document.querySelectorAll('.theme-btn').forEach(b => {
+                    b.classList.remove('active');
+                });
+                this.classList.add('active');
+                
+                // Обновляем цвета платформ
+                const themeData = gameThemes[currentTheme];
+                platforms.forEach((platform, index) => {
+                    if (platform.type !== 'ground') {
+                        platform.color = themeData.platforms[index % themeData.platforms.length];
+                    } else {
+                        platform.color = themeData.ground;
+                    }
+                });
+                
+                createParticles(player.x + player.width / 2, player.y + player.height / 2, '✨', 30);
+                showNotification(`🎨 Тема изменена: ${theme.toUpperCase()}!`);
+            });
+        });
+
+        // Выбор персонажа
+        document.querySelectorAll('.character-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                const emoji = this.getAttribute('data-emoji');
+                const color = this.getAttribute('data-color');
+                
+                player.emoji = emoji;
+                player.color = color;
+                
+                // Обновляем кнопки
+                document.querySelectorAll('.character-btn').forEach(b => {
+                    b.classList.remove('selected');
+                });
+                this.classList.add('selected');
+                
+                createParticles(player.x + player.width / 2, player.y + player.height / 2, emoji, 20);
+                showNotification(`${emoji} Персонаж выбран!`);
+            });
+        });
+
+                window.toggleMusic = function() {
+            if (musicPlaying) {
+                musicPlaying = false;
+                document.getElementById('musicControl').textContent = '🎵 МУЗЫКА: ВЫКЛ';
+                if (gainNode) gainNode.gain.value = 0;
+            } else {
+                audioContext.resume().then(() => {
+                    playBrainrotMusic();
+                    document.getElementById('musicControl').textContent = '🎵 МУЗЫКА: ВКЛ';
+                });
+            }
+        };
+
+                                // Игрок
+        const player = {
+            x: 100,
+            y: 700,  // Спавн на земле
+            width: 35,
+            height: 45,
+            velocityX: 0,
+            velocityY: 0,
+            speed: 6,
+            jumpPower: 14,
+            onGround: false,
+            canDoubleJump: true,
+            color: '#FF1493',
+            trail: [],
+            emoji: '🤖',
+            size: 40
+        };
+
+        // Камера
+        const camera = {
+            x: 0,
+            y: 0,
+            smoothness: 0.1  // Плавность камеры (чем меньше, тем плавнее)
+        };
+
+        // Игровое состояние
+        const gameState = {
+            coins: 0,
+            stars: 0,
+            diamonds: 0,
+            lootboxesOpened: 0,
+            level: 1,
+            score: 0,
+            inventory: {},
+            particles: [],
+            animations: []
+        };
+
+        // Клавиши
+        const keys = {
+            w: false,
+            a: false,
+            s: false,
+            d: false,
+            space: false,
+            e: false,
+            r: false
+        };
+
+                // Платформы для паркура (расширенный уровень)
+        const platforms = [
+            { x: -500, y: 750, width: 5000, height: 50, color: '#2C3E50', type: 'ground' },
+            
+            // Начальная секция
+            { x: 200, y: 650, width: 150, height: 20, color: '#E74C3C', type: 'normal' },
+            { x: 400, y: 550, width: 120, height: 20, color: '#3498DB', type: 'normal' },
+            { x: 600, y: 480, width: 100, height: 20, color: '#2ECC71', type: 'normal' },
+            { x: 750, y: 400, width: 180, height: 20, color: '#F39C12', type: 'normal' },
+            
+            // Средняя секция
+            { x: 1000, y: 500, width: 140, height: 20, color: '#9B59B6', type: 'normal' },
+            { x: 1200, y: 420, width: 120, height: 20, color: '#E74C3C', type: 'normal' },
+            { x: 1400, y: 350, width: 150, height: 20, color: '#1ABC9C', type: 'normal' },
+            { x: 1600, y: 450, width: 130, height: 20, color: '#F1C40F', type: 'normal' },
+            
+            // Сложная секция
+            { x: 1800, y: 380, width: 100, height: 20, color: '#E67E22', type: 'normal' },
+            { x: 1950, y: 300, width: 100, height: 20, color: '#16A085', type: 'normal' },
+            { x: 2100, y: 250, width: 120, height: 20, color: '#8E44AD', type: 'normal' },
+            { x: 2280, y: 200, width: 100, height: 20, color: '#C0392B', type: 'normal' },
+            
+            // Финальная секция
+            { x: 2450, y: 300, width: 140, height: 20, color: '#3498DB', type: 'normal' },
+            { x: 2650, y: 400, width: 150, height: 20, color: '#9B59B6', type: 'normal' },
+            { x: 2850, y: 500, width: 180, height: 20, color: '#E74C3C', type: 'normal' },
+            { x: 3100, y: 600, width: 200, height: 20, color: '#2ECC71', type: 'normal' },
+            
+            // Платформа перед финишем
+            { x: 3350, y: 680, width: 250, height: 20, color: '#F39C12', type: 'normal' }
+        ];
+        
+        // Финиш
+        const finish = {
+            x: 3650,
+            y: 550,
+            width: 80,
+            height: 200,
+            reached: false
+        };
+
+                // Собираемые предметы (расширенные)
+        let collectibles = [
+            // Начало
+            { x: 250, y: 620, type: 'coin', collected: false, emoji: '💰', value: 10 },
+            { x: 450, y: 520, type: 'coin', collected: false, emoji: '💰', value: 10 },
+            { x: 650, y: 450, type: 'star', collected: false, emoji: '⭐', value: 1 },
+            { x: 800, y: 370, type: 'diamond', collected: false, emoji: '💎', value: 5 },
+            
+            // Середина
+            { x: 1050, y: 470, type: 'coin', collected: false, emoji: '💰', value: 10 },
+            { x: 1250, y: 390, type: 'star', collected: false, emoji: '⭐', value: 1 },
+            { x: 1450, y: 320, type: 'diamond', collected: false, emoji: '💎', value: 5 },
+            { x: 1650, y: 420, type: 'coin', collected: false, emoji: '💰', value: 10 },
+            
+            // Сложная часть
+            { x: 1850, y: 350, type: 'star', collected: false, emoji: '⭐', value: 1 },
+            { x: 2000, y: 270, type: 'diamond', collected: false, emoji: '💎', value: 5 },
+            { x: 2150, y: 220, type: 'coin', collected: false, emoji: '💰', value: 10 },
+            { x: 2330, y: 170, type: 'star', collected: false, emoji: '⭐', value: 1 },
+            
+            // Финал
+            { x: 2500, y: 270, type: 'diamond', collected: false, emoji: '💎', value: 5 },
+            { x: 2700, y: 370, type: 'coin', collected: false, emoji: '💰', value: 10 },
+            { x: 2900, y: 470, type: 'star', collected: false, emoji: '⭐', value: 1 },
+            { x: 3150, y: 570, type: 'diamond', collected: false, emoji: '💎', value: 5 },
+            { x: 3450, y: 650, type: 'coin', collected: false, emoji: '💰', value: 10 }
+        ];
+
+                // Лутбоксы с разной редкостью (расширенные)
+        let lootboxes = [
+            { x: 730, y: 330, opened: false, rarity: 'common', color: '#95A5A6', name: 'Обычный' },
+            { x: 1350, y: 280, opened: false, rarity: 'rare', color: '#3498DB', name: 'Редкий' },
+            { x: 1980, y: 230, opened: false, rarity: 'epic', color: '#9B59B6', name: 'Эпический' },
+            { x: 2580, y: 330, opened: false, rarity: 'legendary', color: '#F1C40F', name: 'Легендарный' },
+            { x: 3200, y: 530, opened: false, rarity: 'rare', color: '#3498DB', name: 'Редкий' }
+        ];
+
+        // Таблица дропа лутбоксов
+        const lootTable = {
+            common: [
+                { name: 'Старый ботинок', emoji: '👞', rarity: 'common' },
+                { name: 'Деревянная палка', emoji: '🪵', rarity: 'common' },
+                { name: 'Камень', emoji: '🪨', rarity: 'common' },
+                { name: 'Яблоко', emoji: '🍎', rarity: 'common' }
+            ],
+            rare: [
+                { name: 'Железный меч', emoji: '⚔️', rarity: 'rare' },
+                { name: 'Щит', emoji: '🛡️', rarity: 'rare' },
+                { name: 'Зелье силы', emoji: '🧪', rarity: 'rare' },
+                { name: 'Магический свиток', emoji: '📜', rarity: 'rare' }
+            ],
+            epic: [
+                { name: 'Золотой меч', emoji: '🗡️', rarity: 'epic' },
+                { name: 'Драконий шлем', emoji: '🐉', rarity: 'epic' },
+                { name: 'Волшебная книга', emoji: '📖', rarity: 'epic' },
+                { name: 'Кристалл магии', emoji: '🔮', rarity: 'epic' }
+            ],
+            legendary: [
+                { name: 'ЛЕГЕНДАРНЫЙ МЕЧ', emoji: '⚡🗡️⚡', rarity: 'legendary' },
+                { name: 'АЛМАЗНАЯ БРОНЯ', emoji: '💎🛡️💎', rarity: 'legendary' },
+                { name: 'КОРОНА КОРОЛЯ', emoji: '👑✨', rarity: 'legendary' },
+                { name: 'БОЖЕСТВЕННОЕ КРЫЛО', emoji: '🦅🌟', rarity: 'legendary' }
+            ]
+        };
+
+                // Обработчики клавиш
+        window.addEventListener('keydown', (e) => {
+            const key = e.key.toLowerCase();
+            
+            if (key === 'w') {
+                keys.w = true;
+                e.preventDefault();
+            }
+            if (key === 'a') {
+                keys.a = true;
+                e.preventDefault();
+            }
+            if (key === 's') {
+                keys.s = true;
+                e.preventDefault();
+            }
+            if (key === 'd') {
+                keys.d = true;
+                e.preventDefault();
+            }
+            if (key === 'e') {
+                keys.e = true;
+                e.preventDefault();
+            }
+            if (key === 'r') {
+                keys.r = true;
+                e.preventDefault();
+            }
+            if (key === ' ') {
+                keys.space = true;
+                e.preventDefault();
+            }
+            
+            // Автостарт музыки
+            if (!musicPlaying && audioContext.state === 'suspended') {
+                audioContext.resume().then(() => playBrainrotMusic());
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            const key = e.key.toLowerCase();
+            
+            if (key === 'w') keys.w = false;
+            if (key === 'a') keys.a = false;
+            if (key === 's') keys.s = false;
+            if (key === 'd') keys.d = false;
+            if (key === 'e') keys.e = false;
+            if (key === 'r') keys.r = false;
+            if (key === ' ') keys.space = false;
+            
+            e.preventDefault();
+        });
+
+                // Обновление камеры
+        function updateCamera() {
+            // Центрируем камеру на игроке
+            const targetX = player.x - canvas.width / 2 + player.width / 2;
+            const targetY = player.y - canvas.height / 2 + player.height / 2;
+            
+            // Плавное следование за игроком
+            camera.x += (targetX - camera.x) * camera.smoothness;
+            camera.y += (targetY - camera.y) * camera.smoothness;
+        }
+
+        // Физика и движение игрока
+        function updatePlayer() {
+                        // Горизонтальное движение (A - влево, D - вправо)
+            if (keys.a) {
+                player.velocityX = -player.speed;
+            } else if (keys.d) {
+                player.velocityX = player.speed;
+            } else {
+                player.velocityX *= 0.85;
+            }
+
+            // Обычный прыжок
+            if ((keys.w || keys.space) && player.onGround) {
+                player.velocityY = -player.jumpPower;
+                player.onGround = false;
+                player.canDoubleJump = true;
+                createParticles(player.x + player.width / 2, player.y + player.height, '💨', 8);
+            }
+
+            // Двойной прыжок
+            if ((keys.w || keys.space) && !player.onGround && player.canDoubleJump) {
+                if (!keys.lastJumpState) {
+                    player.velocityY = -player.jumpPower * 0.85;
+                    player.canDoubleJump = false;
+                    createParticles(player.x + player.width / 2, player.y + player.height, '✨', 12);
+                }
+            }
+            keys.lastJumpState = keys.w || keys.space;
+
+            // Суперпрыжок (за монеты)
+            if (keys.r && player.onGround && gameState.coins >= 5) {
+                player.velocityY = -player.jumpPower * 1.5;
+                player.onGround = false;
+                gameState.coins -= 5;
+                createParticles(player.x + player.width / 2, player.y + player.height, '🚀', 20);
+                showNotification('🚀 СУПЕРПРЫЖОК! -5 монет');
+                updateUI();
+                keys.r = false;
+            }
+
+                        // Быстрое падение (убрали, теперь S не используется)
+            // if (keys.s && !player.onGround) {
+            //     player.velocityY += 1.5;
+            // }
+
+            // Гравитация
+            if (!player.onGround) {
+                player.velocityY += 0.7;
+            }
+
+            // Обновление позиции
+            player.x += player.velocityX;
+            player.y += player.velocityY;
+
+            // Ограничение скорости падения
+            if (player.velocityY > 18) player.velocityY = 18;
+
+                                    // Границы экрана (убираем ограничение по X для свободного движения)
+            if (player.x < -200) player.x = -200;  // Небольшое ограничение слева
+            // if (player.x + player.width > canvas.width) player.x = canvas.width - player.width; // Убрали ограничение справа
+            
+            if (player.y > canvas.height + 100) {
+                player.y = 700;  // Респавн на земле
+                player.x = 100;
+                player.velocityY = 0;
+                player.velocityX = 0;
+                showNotification('💀 Упал! Респавн!');
+            }
+            
+            // Проверка финиша
+            if (!finish.reached && checkCollision(player, finish)) {
+                finish.reached = true;
+                gameState.coins += 100;
+                gameState.score += 1000;
+                createParticles(finish.x + finish.width / 2, finish.y + finish.height / 2, '🎉', 50);
+                createParticles(finish.x + finish.width / 2, finish.y + finish.height / 2, '🏆', 30);
+                createParticles(finish.x + finish.width / 2, finish.y + finish.height / 2, '✨', 40);
+                showNotification('🎉 УРАААААААААААА ТЫ ПРОШЕЛ СУБО БРАТИК! 🏆\n+100 МОНЕТ!');
+                updateUI();
+                
+                // Через 3 секунды можно пройти снова
+                setTimeout(() => {
+                    finish.reached = false;
+                }, 3000);
+            }
+
+            // След за игроком
+            player.trail.push({ x: player.x, y: player.y, alpha: 1 });
+            if (player.trail.length > 10) player.trail.shift();
+
+            // Проверка столкновений с платформами
+            player.onGround = false;
+            platforms.forEach(platform => {
+                if (checkCollision(player, platform)) {
+                    if (player.velocityY > 0 && player.y + player.height - player.velocityY <= platform.y + 5) {
+                        player.y = platform.y - player.height;
+                        player.velocityY = 0;
+                        player.onGround = true;
+                        player.canDoubleJump = true;
+                    } else if (player.velocityY < 0 && player.y - player.velocityY >= platform.y + platform.height) {
+                        player.y = platform.y + platform.height;
+                        player.velocityY = 0;
+                    } else {
+                        if (player.x < platform.x) {
+                            player.x = platform.x - player.width;
+                        } else {
+                            player.x = platform.x + platform.width;
+                        }
+                        player.velocityX = 0;
+                    }
+                }
+            });
+
+            // Сбор предметов
+            collectibles.forEach(item => {
+                if (!item.collected && checkCollision(player, { x: item.x - 15, y: item.y - 15, width: 30, height: 30 })) {
+                    item.collected = true;
+                    
+                    if (item.type === 'coin') {
+                        gameState.coins += item.value;
+                        gameState.score += 10;
+                        showNotification(`💰 +${item.value} монет!`);
+                    } else if (item.type === 'star') {
+                        gameState.stars += item.value;
+                        gameState.score += 50;
+                        gameState.level = Math.floor(gameState.stars / 3) + 1;
+                        showNotification('⭐ ЗВЕЗДА! +50 очков!');
+                    } else if (item.type === 'diamond') {
+                        gameState.diamonds += item.value;
+                        gameState.score += 100;
+                        showNotification('💎 АЛМАЗ! +100 очков!');
+                    }
+                    
+                    createParticles(item.x, item.y, item.emoji, 15);
+                    updateUI();
+                }
+            });
+
+            // Взаимодействие с лутбоксами
+            if (keys.e) {
+                lootboxes.forEach(lootbox => {
+                    if (!lootbox.opened && checkCollision(player, { x: lootbox.x - 25, y: lootbox.y - 25, width: 50, height: 50 })) {
+                        openLootbox(lootbox);
+                    }
+                });
+                keys.e = false;
+            }
+        }
+
+        // Проверка столкновений
+        function checkCollision(rect1, rect2) {
+            return rect1.x < rect2.x + rect2.width &&
+                   rect1.x + rect1.width > rect2.x &&
+                   rect1.y < rect2.y + rect2.height &&
+                   rect1.y + rect1.height > rect2.y;
+        }
+
+        // Открытие лутбокса
+        function openLootbox(lootbox) {
+            lootbox.opened = true;
+            gameState.lootboxesOpened++;
+            
+            const table = lootTable[lootbox.rarity];
+            const reward = table[Math.floor(Math.random() * table.length)];
+            
+            // Добавление в инвентарь
+            if (gameState.inventory[reward.name]) {
+                gameState.inventory[reward.name].count++;
+            } else {
+                gameState.inventory[reward.name] = { emoji: reward.emoji, count: 1, rarity: reward.rarity };
+            }
+            
+            // Бонусные очки
+            let bonusScore = 0;
+            if (lootbox.rarity === 'common') bonusScore = 20;
+            else if (lootbox.rarity === 'rare') bonusScore = 50;
+            else if (lootbox.rarity === 'epic') bonusScore = 100;
+            else if (lootbox.rarity === 'legendary') bonusScore = 500;
+            
+            gameState.score += bonusScore;
+            
+            createParticles(lootbox.x, lootbox.y, '✨', 30);
+            createParticles(lootbox.x, lootbox.y, '🎊', 20);
+            showNotification(`🎁 ${lootbox.name} лутбокс!\n${reward.emoji} ${reward.name}!`);
+            updateUI();
+        }
+
+        // Создание частиц
+        function createParticles(x, y, emoji, count) {
+            for (let i = 0; i < count; i++) {
+                gameState.particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 10,
+                    vy: (Math.random() - 0.5) * 10 - 3,
+                    emoji: emoji,
+                    life: 80,
+                    rotation: Math.random() * Math.PI * 2,
+                    rotationSpeed: (Math.random() - 0.5) * 0.2
+                });
+            }
+        }
+
+        // Обновление частиц
+        function updateParticles() {
+            gameState.particles = gameState.particles.filter(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.3;
+                p.rotation += p.rotationSpeed;
+                p.life--;
+                return p.life > 0;
+            });
+        }
+
+                // Отрисовка
+        function draw() {
+                        // Очистка canvas
+            ctx.save();
+            
+            // Градиентный фон (меняется в зависимости от темы)
+            const themeData = gameThemes[currentTheme];
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, themeData.sky[0]);
+            gradient.addColorStop(1, themeData.sky[1]);
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Применяем смещение камеры
+            ctx.translate(-camera.x, -camera.y);
+
+            // Облака (двигаются с камерой)
+            drawClouds();
+
+            // Платформы
+            platforms.forEach(platform => {
+                ctx.fillStyle = platform.color;
+                ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
+                
+                // Тень
+                ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                ctx.fillRect(platform.x + 3, platform.y + 3, platform.width, platform.height);
+                
+                // Граница
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(platform.x, platform.y, platform.width, platform.height);
+            });
+
+            // Собираемые предметы
+            collectibles.forEach(item => {
+                if (!item.collected) {
+                    const time = Date.now() / 1000;
+                    const bounce = Math.sin(time * 3) * 5;
+                    
+                    ctx.save();
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = item.type === 'diamond' ? '#00FFFF' : item.type === 'star' ? '#FFD700' : '#90EE90';
+                    ctx.font = '32px Arial';
+                    ctx.fillText(item.emoji, item.x - 16, item.y + bounce);
+                    ctx.restore();
+                }
+            });
+
+            // Лутбоксы
+            lootboxes.forEach((lootbox, index) => {
+                if (!lootbox.opened) {
+                    const time = Date.now() / 1000;
+                    const float = Math.sin(time * 2 + index) * 8;
+                    const glow = Math.sin(time * 4) * 0.3 + 0.7;
+                    
+                    ctx.save();
+                    
+                    // Свечение
+                    ctx.shadowBlur = 25 * glow;
+                    ctx.shadowColor = lootbox.color;
+                    
+                    // Коробка
+                    ctx.fillStyle = lootbox.color;
+                    ctx.fillRect(lootbox.x - 20, lootbox.y - 20 + float, 40, 40);
+                    
+                    ctx.strokeStyle = '#FFD700';
+                    ctx.lineWidth = 4;
+                    ctx.strokeRect(lootbox.x - 20, lootbox.y - 20 + float, 40, 40);
+                    
+                    // Эмодзи
+                    ctx.shadowBlur = 0;
+                    ctx.font = '36px Arial';
+                    ctx.fillText('🎁', lootbox.x - 18, lootbox.y + 12 + float);
+                    
+                    // Подсказка
+                    ctx.font = 'bold 14px Arial';
+                    ctx.fillStyle = 'white';
+                    ctx.strokeStyle = 'black';
+                    ctx.lineWidth = 3;
+                    ctx.strokeText('E', lootbox.x - 6, lootbox.y - 30 + float);
+                    ctx.fillText('E', lootbox.x - 6, lootbox.y - 30 + float);
+                    
+                    ctx.restore();
+                }
+            });
+
+            // След игрока
+            player.trail.forEach((pos, i) => {
+                const alpha = (i / player.trail.length) * 0.3;
+                ctx.fillStyle = `rgba(255, 20, 147, ${alpha})`;
+                ctx.fillRect(pos.x, pos.y, player.width, player.height);
+            });
+
+                        // Игрок с анимацией
+            const time = Date.now() / 100;
+            const bounce = Math.sin(time * 0.3) * 3;
+            
+            ctx.save();
+            ctx.translate(player.x + player.width / 2, player.y + player.height / 2);
+            if (player.velocityX < 0) ctx.scale(-1, 1);
+            
+            // Тело (фон)
+            ctx.fillStyle = player.color;
+            ctx.fillRect(-player.width / 2, -player.height / 2, player.width, player.height);
+            
+            // Граница
+            ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(-player.width / 2, -player.height / 2, player.width, player.height);
+            
+            // Эмодзи персонажа
+            ctx.font = `${player.size}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Тень для эмодзи
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = 'rgba(0,0,0,0.5)';
+            ctx.shadowOffsetY = 2;
+            
+            ctx.fillText(player.emoji, 0, bounce);
+            
+            ctx.restore();
+
+                        // Частицы
+            gameState.particles.forEach(p => {
+                ctx.save();
+                ctx.globalAlpha = p.life / 80;
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.rotation);
+                ctx.font = '20px Arial';
+                ctx.fillText(p.emoji, -10, 10);
+                ctx.restore();
+            });
+            
+            // Финиш (флаг)
+            if (!finish.reached) {
+                const time = Date.now() / 100;
+                const wave = Math.sin(time * 0.5) * 5;
+                
+                // Столб
+                ctx.fillStyle = '#8B4513';
+                ctx.fillRect(finish.x, finish.y, 15, finish.height);
+                
+                // Флаг
+                ctx.fillStyle = '#FFD700';
+                ctx.beginPath();
+                ctx.moveTo(finish.x + 15, finish.y);
+                ctx.lineTo(finish.x + 15 + 65, finish.y + 30 + wave);
+                ctx.lineTo(finish.x + 15, finish.y + 60);
+                ctx.closePath();
+                ctx.fill();
+                
+                // Рисунок на флаге
+                ctx.font = '40px Arial';
+                ctx.fillText('🏁', finish.x + 25, finish.y + 45);
+                
+                // Свечение
+                ctx.save();
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = '#FFD700';
+                ctx.strokeStyle = '#FFD700';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(finish.x - 10, finish.y - 10, finish.width + 20, finish.height + 20);
+                ctx.restore();
+                
+                // Текст
+                ctx.font = 'bold 20px Arial';
+                ctx.fillStyle = 'white';
+                ctx.strokeStyle = 'black';
+                ctx.lineWidth = 3;
+                ctx.strokeText('ФИНИШ!', finish.x - 10, finish.y - 20);
+                ctx.fillText('ФИНИШ!', finish.x - 10, finish.y - 20);
+            } else {
+                // Анимация завершения
+                ctx.font = 'bold 60px Arial';
+                ctx.fillStyle = '#FFD700';
+                ctx.strokeStyle = '#FF1493';
+                ctx.lineWidth = 5;
+                const text = 'ПРОЙДЕНО! 🎉';
+                ctx.strokeText(text, finish.x - 50, finish.y + 100);
+                ctx.fillText(text, finish.x - 50, finish.y + 100);
+            }
+
+                        // Восстанавливаем контекст (возвращаем камеру)
+            ctx.restore();
+            
+            // FPS счётчик (статичный, не двигается с камерой)
+            ctx.fillStyle = 'rgba(0,0,0,0.5)';
+            ctx.font = '14px Arial';
+            ctx.fillText(`FPS: ${Math.round(1000 / 16)}`, canvas.width - 80, 20);
+        }
+
+                        // Рисование облаков
+        function drawClouds() {
+            const time = Date.now() / 10000;
+            const themeData = gameThemes[currentTheme];
+            
+            for (let i = 0; i < 8; i++) {
+                const x = ((time * 50 + i * 400) % 3000) - 200 + camera.x * 0.5;
+                const y = 60 + i * 50 + camera.y * 0.3;
+                
+                ctx.fillStyle = themeData.clouds;
+                ctx.beginPath();
+                ctx.arc(x, y, 30, 0, Math.PI * 2);
+                ctx.arc(x + 35, y, 40, 0, Math.PI * 2);
+                ctx.arc(x + 70, y, 30, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // Показать уведомление
+        function showNotification(text) {
+            const notification = document.getElementById('notification');
+            notification.innerHTML = text.replace('\n', '<br>');
+            notification.style.display = 'block';
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 2500);
+        }
+
+        // Обновление UI
+        function updateUI() {
+            document.getElementById('coins').textContent = gameState.coins;
+            document.getElementById('stars').textContent = gameState.stars;
+            document.getElementById('diamonds').textContent = gameState.diamonds;
+            document.getElementById('lootboxes').textContent = gameState.lootboxesOpened;
+            document.getElementById('level').textContent = gameState.level;
+            document.getElementById('score').textContent = gameState.score;
+            
+            const itemsList = document.getElementById('itemsList');
+            itemsList.innerHTML = '';
+            
+            const rarityColors = {
+                common: '#95A5A6',
+                rare: '#3498DB',
+                epic: '#9B59B6',
+                legendary: '#F1C40F'
+            };
+            
+            for (let [name, data] of Object.entries(gameState.inventory)) {
+                const div = document.createElement('div');
+                div.className = 'item';
+                div.style.borderColor = rarityColors[data.rarity] || '#fff';
+                div.innerHTML = `${data.emoji} <strong>${name}</strong> x${data.count}`;
+                itemsList.appendChild(div);
+            }
+        }
+
+                // Игровой цикл
+        function gameLoop() {
+            updatePlayer();
+            updateCamera();
+            updateParticles();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Автостарт музыки при клике
+        canvas.addEventListener('click', () => {
+            if (!musicPlaying) {
+                audioContext.resume().then(() => {
+                    playBrainrotMusic();
+                    document.getElementById('musicControl').textContent = '🎵 МУЗЫКА: ВКЛ';
+                });
+            }
+        });
+
+                        // Запуск игры
+        console.log('🎮 Запуск игры...');
+        updateUI();
+        gameLoop();
+        
+        // Приветственное сообщение
+        setTimeout(() => {
+            showNotification('🎮 Игра загружена!\nВыбери персонажа!');
+        }, 500);
+        
+        console.log('🎮 Игра запущена!');
+        console.log('Управление: W/SPACE - прыжок, A/D - движение, E - лутбоксы');
+        
+        } // Конец initGame
+    </script>
+</body>
+</html>

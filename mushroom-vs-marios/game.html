@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Грибок против Марио</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #5c94fc;
+            font-family: 'Courier New', monospace;
+        }
+        
+        #gameContainer {
+            text-align: center;
+        }
+        
+        canvas {
+            border: 4px solid #000;
+            background: #5c94fc;
+            display: block;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+        
+        #score {
+            color: white;
+            font-size: 24px;
+            margin: 10px 0;
+            text-shadow: 2px 2px #000;
+        }
+        
+        .overlay {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 40px;
+            border-radius: 10px;
+            text-align: center;
+            border: 4px solid #fff;
+            z-index: 100;
+        }
+        
+        .overlay h2 {
+            margin: 0 0 20px 0;
+            font-size: 36px;
+        }
+        
+        .overlay button {
+            font-size: 20px;
+            padding: 10px 30px;
+            margin: 10px;
+            cursor: pointer;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .overlay button:hover {
+            background: #45a049;
+        }
+        
+        #mainMenu {
+            display: block;
+        }
+        
+        #mainMenu h1 {
+            font-size: 48px;
+            margin: 0 0 30px 0;
+            color: #ffff00;
+            text-shadow: 3px 3px #000;
+        }
+        
+        #levelComplete {
+            background: rgba(0, 100, 0, 0.95);
+        }
+        
+        #svoContract {
+            background: rgba(139, 0, 0, 0.95);
+        }
+        
+        #svoContract p {
+            font-size: 18px;
+            line-height: 1.6;
+            margin: 20px 0;
+        }
+        
+        .contract-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        
+        #acceptContract {
+            background: #ff0000;
+            font-size: 24px;
+            padding: 15px 40px;
+        }
+        
+        #acceptContract:hover {
+            background: #cc0000;
+        }
+        
+        #pauseMenu {
+            background: rgba(0, 0, 0, 0.95);
+        }
+        
+        #instructions {
+            color: white;
+            margin: 10px 0;
+            font-size: 16px;
+            text-shadow: 1px 1px #000;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <div id="score">Счёт: 0 | Жизни: ❤❤❤ | Уровень: 1</div>
+        <canvas id="gameCanvas" width="1360" height="1020"></canvas>
+        <div id="instructions">
+            ⬅ A / Стрелка влево | ➡ D / Стрелка вправо | ⬆ W / Пробел - Прыжок | ESC - Пауза
+        </div>
+        
+        <!-- Главное меню -->
+        <div id="mainMenu" class="overlay">
+            <h1>🍄 ГРИБОК vs МАРИО 🍄</h1>
+            <p style="font-size: 20px; margin-bottom: 30px;">Прыгай на жирных Марио и собери повестку!</p>
+            <button onclick="startGame()" style="font-size: 28px; padding: 15px 50px;">НАЧАТЬ ИГРУ</button>
+        </div>
+        
+        <!-- Пауза -->
+        <div id="pauseMenu" class="overlay">
+            <h2>ПАУЗА</h2>
+            <button onclick="resumeGame()">Продолжить</button>
+            <button onclick="backToMenu()">В главное меню</button>
+        </div>
+        
+        <!-- Завершение уровня -->
+        <div id="levelComplete" class="overlay">
+            <h2>УРОВЕНЬ ПРОЙДЕН!</h2>
+            <p id="levelScore"></p>
+            <button onclick="showContract()">Получить повестку</button>
+        </div>
+        
+        <!-- Баннер с контрактом СВО -->
+        <div id="svoContract" class="overlay">
+            <h2>⚠️ ПОВЕСТКА ⚠️</h2>
+            <p style="font-size: 22px; font-weight: bold;">Поздравляем! Вы получили повестку!</p>
+            <p>Контракт на участие в специальной военной операции готов к подписанию.</p>
+            <p style="font-size: 16px; color: #ffff00;">Подпишите контракт чтобы продолжить</p>
+            <div class="contract-buttons">
+                <button id="acceptContract" onclick="nextLevel()">ПОДПИСАТЬ КОНТРАКТ</button>
+            </div>
+        </div>
+        
+        <!-- Конец игры -->
+        <div id="gameOver" class="overlay">
+            <h2>ИГРА ОКОНЧЕНА!</h2>
+            <p id="finalScore"></p>
+            <button onclick="backToMenu()">В главное меню</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Игровые переменности
+        let score = 0;
+        let lives = 3;
+        let currentLevel = 1;
+        let gameRunning = false;
+        let gamePaused = false;
+        let gameState = 'menu'; // menu, playing, paused, levelComplete, contract, gameOver
+        let keys = {};
+        
+        // FPS
+        const FPS = 60;
+        const frameTime = 1000 / FPS;
+        let lastFrameTime = 0;
+        
+        // Гравитация и физика
+        const GRAVITY = 0.6;
+        const JUMP_POWER = -12;
+        const MOVE_SPEED = 4;
+        
+        // Игрок (Грибок)
+        const player = {
+            x: 100,
+            y: 400,
+            width: 32,
+            height: 32,
+            velocityX: 0,
+            velocityY: 0,
+            jumping: false,
+            color: '#ff0000'
+        };
+        
+        // Платформы для уровней (увеличены на 70%)
+        const levelData = {
+            1: {
+                platforms: [
+                    { x: 0, y: 970, width: 1360, height: 50 },
+                    { x: 100, y: 870, width: 150, height: 20 },
+                    { x: 300, y: 800, width: 130, height: 20 },
+                    { x: 500, y: 730, width: 140, height: 20 },
+                    { x: 150, y: 660, width: 130, height: 20 },
+                    { x: 700, y: 870, width: 150, height: 20 },
+                    { x: 900, y: 800, width: 130, height: 20 },
+                    { x: 1100, y: 730, width: 140, height: 20 },
+                    { x: 950, y: 660, width: 130, height: 20 },
+                    { x: 350, y: 590, width: 120, height: 20 },
+                    { x: 550, y: 520, width: 130, height: 20 },
+                    { x: 800, y: 590, width: 120, height: 20 },
+                    { x: 200, y: 450, width: 140, height: 20 },
+                    { x: 450, y: 380, width: 130, height: 20 },
+                    { x: 700, y: 450, width: 140, height: 20 },
+                    { x: 1000, y: 380, width: 130, height: 20 },
+                    { x: 350, y: 310, width: 150, height: 20 },
+                    { x: 650, y: 240, width: 140, height: 20 },
+                    { x: 950, y: 310, width: 150, height: 20 },
+                    { x: 150, y: 240, width: 140, height: 20 },
+                    { x: 450, y: 170, width: 150, height: 20 },
+                    { x: 750, y: 170, width: 150, height: 20 },
+                    { x: 300, y: 100, width: 200, height: 20 }
+                ],
+                enemies: [
+                    { x: 200, y: 50 },
+                    { x: 600, y: 50 },
+                    { x: 1000, y: 50 }
+                ],
+                summon: { x: 380, y: 60 },
+                spawnInterval: 5000,
+                enemySpeed: 2.5,
+                maxEnemies: 8
+            },
+            2: {
+                platforms: [
+                    { x: 0, y: 970, width: 300, height: 50 },
+                    { x: 1060, y: 970, width: 300, height: 50 },
+                    { x: 150, y: 900, width: 130, height: 20 },
+                    { x: 350, y: 830, width: 120, height: 20 },
+                    { x: 550, y: 900, width: 130, height: 20 },
+                    { x: 750, y: 830, width: 120, height: 20 },
+                    { x: 950, y: 900, width: 130, height: 20 },
+                    { x: 1100, y: 830, width: 120, height: 20 },
+                    { x: 100, y: 760, width: 120, height: 20 },
+                    { x: 300, y: 690, width: 130, height: 20 },
+                    { x: 500, y: 760, width: 120, height: 20 },
+                    { x: 700, y: 690, width: 130, height: 20 },
+                    { x: 900, y: 760, width: 120, height: 20 },
+                    { x: 1100, y: 690, width: 130, height: 20 },
+                    { x: 200, y: 620, width: 140, height: 20 },
+                    { x: 450, y: 550, width: 130, height: 20 },
+                    { x: 700, y: 620, width: 140, height: 20 },
+                    { x: 950, y: 550, width: 130, height: 20 },
+                    { x: 150, y: 480, width: 130, height: 20 },
+                    { x: 400, y: 410, width: 140, height: 20 },
+                    { x: 650, y: 480, width: 130, height: 20 },
+                    { x: 900, y: 410, width: 140, height: 20 },
+                    { x: 300, y: 340, width: 150, height: 20 },
+                    { x: 600, y: 270, width: 140, height: 20 },
+                    { x: 850, y: 340, width: 150, height: 20 },
+                    { x: 200, y: 200, width: 140, height: 20 },
+                    { x: 450, y: 130, width: 160, height: 20 },
+                    { x: 750, y: 200, width: 140, height: 20 },
+                    { x: 1000, y: 130, width: 160, height: 20 },
+                    { x: 350, y: 60, width: 200, height: 20 }
+                ],
+                enemies: [
+                    { x: 200, y: 50 },
+                    { x: 500, y: 50 },
+                    { x: 800, y: 50 },
+                    { x: 1100, y: 50 }
+                ],
+                summon: { x: 420, y: 20 },
+                spawnInterval: 3500,
+                enemySpeed: 3.5,
+                maxEnemies: 12
+            },
+            3: {
+                platforms: [
+                    { x: 600, y: 970, width: 160, height: 50 },
+                    { x: 50, y: 900, width: 120, height: 20 },
+                    { x: 200, y: 830, width: 110, height: 20 },
+                    { x: 350, y: 900, width: 120, height: 20 },
+                    { x: 520, y: 830, width: 110, height: 20 },
+                    { x: 700, y: 900, width: 120, height: 20 },
+                    { x: 870, y: 830, width: 110, height: 20 },
+                    { x: 1020, y: 900, width: 120, height: 20 },
+                    { x: 1190, y: 830, width: 110, height: 20 },
+                    { x: 100, y: 760, width: 130, height: 20 },
+                    { x: 280, y: 690, width: 120, height: 20 },
+                    { x: 450, y: 760, width: 130, height: 20 },
+                    { x: 630, y: 690, width: 120, height: 20 },
+                    { x: 800, y: 760, width: 130, height: 20 },
+                    { x: 980, y: 690, width: 120, height: 20 },
+                    { x: 1150, y: 760, width: 130, height: 20 },
+                    { x: 50, y: 620, width: 120, height: 20 },
+                    { x: 220, y: 550, width: 130, height: 20 },
+                    { x: 400, y: 620, width: 120, height: 20 },
+                    { x: 570, y: 550, width: 130, height: 20 },
+                    { x: 750, y: 620, width: 120, height: 20 },
+                    { x: 920, y: 550, width: 130, height: 20 },
+                    { x: 1100, y: 620, width: 120, height: 20 },
+                    { x: 150, y: 480, width: 140, height: 20 },
+                    { x: 350, y: 410, width: 130, height: 20 },
+                    { x: 550, y: 480, width: 140, height: 20 },
+                    { x: 750, y: 410, width: 130, height: 20 },
+                    { x: 950, y: 480, width: 140, height: 20 },
+                    { x: 1150, y: 410, width: 130, height: 20 },
+                    { x: 100, y: 340, width: 150, height: 20 },
+                    { x: 300, y: 270, width: 140, height: 20 },
+                    { x: 500, y: 340, width: 150, height: 20 },
+                    { x: 700, y: 270, width: 140, height: 20 },
+                    { x: 900, y: 340, width: 150, height: 20 },
+                    { x: 1100, y: 270, width: 140, height: 20 },
+                    { x: 200, y: 200, width: 140, height: 20 },
+                    { x: 400, y: 130, width: 150, height: 20 },
+                    { x: 600, y: 200, width: 140, height: 20 },
+                    { x: 800, y: 130, width: 150, height: 20 },
+                    { x: 1000, y: 200, width: 140, height: 20 },
+                    { x: 300, y: 60, width: 200, height: 20 },
+                    { x: 650, y: 60, width: 200, height: 20 }
+                ],
+                enemies: [
+                    { x: 200, y: 50 },
+                    { x: 500, y: 50 },
+                    { x: 800, y: 50 },
+                    { x: 1100, y: 50 }
+                ],
+                summon: { x: 400, y: 20 },
+                spawnInterval: 2500,
+                enemySpeed: 4.5,
+                maxEnemies: 16
+            }
+        };
+        
+        let platforms = [];
+        let summon = null;
+        
+        // Враги (Жирные Марио)
+        let enemies = [];
+        
+        class Enemy {
+            constructor(x, y, speed) {
+                this.x = x;
+                this.y = y;
+                this.width = 50;
+                this.height = 60;
+                this.baseSpeed = speed || 2.5;
+                this.velocityX = this.baseSpeed;
+                this.velocityY = 0;
+                this.alive = true;
+                this.onGround = false;
+                this.jumpCooldown = 0;
+            }
+            
+            update() {
+                // ИИ - преследование игрока
+                const dx = player.x - this.x;
+                const dy = player.y - this.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                // Движение к игроку по горизонтали
+                if (distance > 50) {
+                    if (dx > 20) {
+                        this.velocityX = this.baseSpeed;
+                    } else if (dx < -20) {
+                        this.velocityX = -this.baseSpeed;
+                    }
+                }
+                
+                this.x += this.velocityX;
+                this.velocityY += GRAVITY;
+                this.y += this.velocityY;
+                
+                // Ограничение скорости падения
+                this.velocityY = Math.min(this.velocityY, 15);
+                
+                this.onGround = false;
+                
+                // Проверка столкновений с платформами
+                for (let platform of platforms) {
+                    if (this.velocityY > 0 &&
+                        this.x < platform.x + platform.width &&
+                        this.x + this.width > platform.x &&
+                        this.y + this.height > platform.y &&
+                        this.y + this.height < platform.y + platform.height) {
+                        this.y = platform.y - this.height;
+                        this.velocityY = 0;
+                        this.onGround = true;
+                    }
+                }
+                
+                // Умение прыгать
+                if (this.jumpCooldown > 0) {
+                    this.jumpCooldown--;
+                }
+                
+                // Прыжок, если игрок выше и рядом
+                if (this.onGround && this.jumpCooldown === 0 && dy < -50 && Math.abs(dx) < 200) {
+                    this.velocityY = JUMP_POWER * 0.85; // Марио прыгают чуть ниже
+                    this.jumpCooldown = 60; // 1 секунда кулдаун
+                }
+                
+                // Границы экрана
+                if (this.x <= 0) {
+                    this.x = 0;
+                    this.velocityX = this.baseSpeed;
+                }
+                if (this.x + this.width >= canvas.width) {
+                    this.x = canvas.width - this.width;
+                    this.velocityX = -this.baseSpeed;
+                }
+                
+                // Проверка падения за экран
+                if (this.y > canvas.height) {
+                    this.alive = false;
+                }
+            }
+            
+            draw() {
+                // ОЧЕНЬ жирное тело
+                ctx.fillStyle = '#ff0000';
+                ctx.fillRect(this.x + 2, this.y + 18, 46, 42);
+                
+                // Голова
+                ctx.fillStyle = '#ffdbac';
+                ctx.fillRect(this.x + 12, this.y + 2, 26, 22);
+                
+                // Шапка
+                ctx.fillStyle = '#ff0000';
+                ctx.fillRect(this.x + 10, this.y, 30, 10);
+                ctx.fillRect(this.x + 18, this.y - 4, 14, 6);
+                
+                // Большие усы
+                ctx.fillStyle = '#000';
+                ctx.fillRect(this.x + 12, this.y + 15, 10, 5);
+                ctx.fillRect(this.x + 28, this.y + 15, 10, 5);
+                
+                // Глаза
+                ctx.fillStyle = '#000';
+                ctx.fillRect(this.x + 16, this.y + 10, 4, 4);
+                ctx.fillRect(this.x + 30, this.y + 10, 4, 4);
+                
+                // Много пуговиц на жирном животе
+                ctx.fillStyle = '#ffff00';
+                ctx.fillRect(this.x + 23, this.y + 28, 5, 5);
+                ctx.fillRect(this.x + 23, this.y + 38, 5, 5);
+                ctx.fillRect(this.x + 23, this.y + 48, 5, 5);
+                
+                // Короткие толстые ноги
+                ctx.fillStyle = '#0000ff';
+                ctx.fillRect(this.x + 10, this.y + 52, 13, 8);
+                ctx.fillRect(this.x + 28, this.y + 52, 13, 8);
+                
+                // Руки (толстые)
+                ctx.fillStyle = '#ffdbac';
+                ctx.fillRect(this.x, this.y + 25, 6, 15);
+                ctx.fillRect(this.x + 44, this.y + 25, 6, 15);
+            }
+        }
+        
+        // Загрузка уровня
+        function loadLevel(level) {
+            const data = levelData[level];
+            if (!data) {
+                // Игра пройдена
+                gameState = 'gameOver';
+                document.getElementById('finalScore').textContent = `Поздравляем! Вы прошли все уровни!\nИтоговый счёт: ${score}`;
+                document.getElementById('gameOver').style.display = 'block';
+                return;
+            }
+            
+            platforms = JSON.parse(JSON.stringify(data.platforms));
+            summon = { ...data.summon, width: 30, height: 35, collected: false };
+            
+            enemies = [];
+            for (let pos of data.enemies) {
+                enemies.push(new Enemy(pos.x, pos.y, data.enemySpeed));
+            }
+            
+            // Респавн игрока
+            player.x = 50;
+            player.y = 400;
+            player.velocityX = 0;
+            player.velocityY = 0;
+            player.jumping = false;
+            
+            // Запускаем постоянный спавн врагов
+            startEnemySpawner(data.spawnInterval);
+        }
+        
+        let enemySpawner = null;
+        
+        // Постоянный спавн врагов
+        function startEnemySpawner(interval) {
+            // Останавливаем предыдущий спавнер
+            if (enemySpawner) {
+                clearInterval(enemySpawner);
+            }
+            
+            // Запускаем новый спавнер
+            const levelSettings = levelData[currentLevel];
+            enemySpawner = setInterval(() => {
+                if (gameRunning && gameState === 'playing' && !summon.collected) {
+                    // Ограничение количества врагов
+                    if (enemies.length >= levelSettings.maxEnemies) return;
+                    
+                    // Находим платформы рядом с игроком
+                    const nearbyPlatforms = platforms.filter(p => {
+                        const distX = Math.abs((p.x + p.width/2) - player.x);
+                        const distY = Math.abs(p.y - player.y);
+                        return distX < 400 && distY < 300 && p.y > 100; // Не на самом верху
+                    });
+                    
+                    if (nearbyPlatforms.length > 0) {
+                        // Выбираем случайную платформу
+                        const platform = nearbyPlatforms[Math.floor(Math.random() * nearbyPlatforms.length)];
+                        const spawnX = platform.x + Math.random() * (platform.width - 60);
+                        const spawnY = platform.y - 70;
+                        enemies.push(new Enemy(spawnX, spawnY, levelSettings.enemySpeed));
+                    } else {
+                        // Если нет платформ рядом, спавним сбоку
+                        const spawnX = Math.random() > 0.5 ? 50 : canvas.width - 100;
+                        const spawnY = Math.random() * 300 + 100;
+                        enemies.push(new Enemy(spawnX, spawnY, levelSettings.enemySpeed));
+                    }
+                }
+            }, interval);
+        }
+        
+        // Остановка спавнера врагов
+        function stopEnemySpawner() {
+            if (enemySpawner) {
+                clearInterval(enemySpawner);
+                enemySpawner = null;
+            }
+        }
+        
+        // Управление
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (gameState === 'playing') {
+                    pauseGame();
+                } else if (gameState === 'paused') {
+                    resumeGame();
+                }
+                return;
+            }
+            
+            keys[e.key.toLowerCase()] = true;
+            
+            if (gameState === 'playing' && (e.key === ' ' || e.key.toLowerCase() === 'w' || e.key === 'ArrowUp') && !player.jumping) {
+                player.velocityY = JUMP_POWER;
+                player.jumping = true;
+            }
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            keys[e.key.toLowerCase()] = false;
+        });
+        
+        // Обновление игрока
+        function updatePlayer() {
+            // Движение влево-вправо
+            player.velocityX = 0;
+            if (keys['a'] || keys['arrowleft']) {
+                player.velocityX = -MOVE_SPEED;
+            }
+            if (keys['d'] || keys['arrowright']) {
+                player.velocityX = MOVE_SPEED;
+            }
+            
+            player.x += player.velocityX;
+            player.velocityY += GRAVITY;
+            player.y += player.velocityY;
+            
+            // Ограничение скорости падения
+            player.velocityY = Math.min(player.velocityY, 15);
+            
+            // Границы экрана
+            if (player.x < 0) player.x = 0;
+            if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+            
+            // Столкновение с платформами
+            for (let platform of platforms) {
+                if (player.velocityY > 0 &&
+                    player.x < platform.x + platform.width &&
+                    player.x + player.width > platform.x &&
+                    player.y + player.height > platform.y &&
+                    player.y + player.height < platform.y + platform.height) {
+                    player.y = platform.y - player.height;
+                    player.velocityY = 0;
+                    player.jumping = false;
+                }
+            }
+            
+            // Падение за экран
+            if (player.y > canvas.height) {
+                loseLife();
+            }
+        }
+        
+        // Рисование игрока (грибок)
+        function drawPlayer() {
+            // Ножка гриба
+            ctx.fillStyle = '#f5deb3';
+            ctx.fillRect(player.x + 10, player.y + 16, 12, 16);
+            
+            // Шляпка гриба
+            ctx.fillStyle = '#ff0000';
+            ctx.beginPath();
+            ctx.arc(player.x + 16, player.y + 12, 14, 0, Math.PI, true);
+            ctx.fill();
+            ctx.fillRect(player.x + 2, player.y + 12, 28, 8);
+            
+            // Белые пятна на шляпке
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(player.x + 8, player.y + 6, 6, 6);
+            ctx.fillRect(player.x + 20, player.y + 4, 5, 5);
+            ctx.fillRect(player.x + 18, player.y + 14, 4, 4);
+            
+            // Глаза
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(player.x + 10, player.y + 20, 3, 3);
+            ctx.fillRect(player.x + 19, player.y + 20, 3, 3);
+        }
+        
+        // Рисование платформ
+        function drawPlatforms() {
+            for (let platform of platforms) {
+                // Основа платформы
+                ctx.fillStyle = '#8b4513';
+                ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
+                
+                // Трава сверху
+                ctx.fillStyle = '#228b22';
+                ctx.fillRect(platform.x, platform.y, platform.width, 5);
+                
+                // Кирпичи
+                ctx.strokeStyle = '#654321';
+                ctx.lineWidth = 1;
+                for (let i = 0; i < platform.width; i += 30) {
+                    ctx.strokeRect(platform.x + i, platform.y + 5, 30, platform.height - 5);
+                }
+            }
+        }
+        
+        // Проверка столкновений
+        function checkCollisions() {
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                let enemy = enemies[i];
+                
+                if (!enemy.alive) {
+                    enemies.splice(i, 1);
+                    continue;
+                }
+                
+                // Проверка столкновения игрока с врагом
+                if (player.x < enemy.x + enemy.width &&
+                    player.x + player.width > enemy.x &&
+                    player.y < enemy.y + enemy.height &&
+                    player.y + player.height > enemy.y) {
+                    
+                    // Прыжок сверху на врага
+                    if (player.velocityY > 0 && player.y + player.height - 10 < enemy.y + enemy.height / 2) {
+                        enemy.alive = false;
+                        player.velocityY = JUMP_POWER * 0.6;
+                        score += 100;
+                        updateScore();
+                    } else {
+                        // Игрок получает урон
+                        loseLife();
+                    }
+                }
+            }
+        }
+        
+        // Потеря жизни
+        function loseLife() {
+            lives--;
+            updateScore();
+            
+            if (lives <= 0) {
+                gameOver();
+            } else {
+                // Респавн игрока
+                player.x = 100;
+                player.y = 400;
+                player.velocityX = 0;
+                player.velocityY = 0;
+                player.jumping = false;
+            }
+        }
+        
+        // Проверка подбора повестки
+        function checkSummonCollection() {
+            if (summon && !summon.collected &&
+                player.x < summon.x + summon.width &&
+                player.x + player.width > summon.x &&
+                player.y < summon.y + summon.height &&
+                player.y + player.height > summon.y) {
+                summon.collected = true;
+                score += 500;
+                completeLevel();
+            }
+        }
+        
+        // Рисование повестки
+        function drawSummon() {
+            if (!summon || summon.collected) return;
+            
+            // Бумага
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(summon.x, summon.y, summon.width, summon.height);
+            
+            // Рамка
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(summon.x, summon.y, summon.width, summon.height);
+            
+            // Красная печать
+            ctx.fillStyle = '#ff0000';
+            ctx.beginPath();
+            ctx.arc(summon.x + summon.width/2, summon.y + summon.height/2, 8, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Текст "ПОВЕСТКА"
+            ctx.fillStyle = '#000';
+            ctx.font = 'bold 8px Arial';
+            ctx.fillText('⚠️', summon.x + 11, summon.y + 10);
+            
+            // Анимация мерцания
+            if (Math.floor(Date.now() / 300) % 2 === 0) {
+                ctx.strokeStyle = '#ffff00';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(summon.x - 2, summon.y - 2, summon.width + 4, summon.height + 4);
+            }
+        }
+        
+        // Обновление счёта
+        function updateScore() {
+            let hearts = '❤'.repeat(lives);
+            document.getElementById('score').textContent = `Счёт: ${score} | Жизни: ${hearts} | Уровень: ${currentLevel}`;
+        }
+        
+        // Завершение уровня
+        function completeLevel() {
+            gameState = 'levelComplete';
+            gameRunning = false;
+            stopEnemySpawner(); // Останавливаем спавн врагов
+            document.getElementById('levelScore').textContent = `Уровень ${currentLevel} пройден!\nНабрано очков: ${score}`;
+            document.getElementById('levelComplete').style.display = 'block';
+        }
+        
+        // Показать контракт
+        function showContract() {
+            document.getElementById('levelComplete').style.display = 'none';
+            gameState = 'contract';
+            document.getElementById('svoContract').style.display = 'block';
+        }
+        
+        // Следующий уровень
+        function nextLevel() {
+            document.getElementById('svoContract').style.display = 'none';
+            currentLevel++;
+            lives = Math.min(lives + 1, 5); // Бонус жизнь за уровень
+            loadLevel(currentLevel);
+            gameState = 'playing';
+            gameRunning = true;
+            updateScore();
+            gameLoop(0);
+        }
+        
+        // Начать игру
+        function startGame() {
+            document.getElementById('mainMenu').style.display = 'none';
+            score = 0;
+            lives = 3;
+            currentLevel = 1;
+            loadLevel(currentLevel);
+            gameState = 'playing';
+            gameRunning = true;
+            updateScore();
+            gameLoop(0);
+        }
+        
+        // Пауза
+        function pauseGame() {
+            gameState = 'paused';
+            gameRunning = false;
+            document.getElementById('pauseMenu').style.display = 'block';
+        }
+        
+        // Продолжить
+        function resumeGame() {
+            document.getElementById('pauseMenu').style.display = 'none';
+            gameState = 'playing';
+            gameRunning = true;
+            gameLoop(0);
+        }
+        
+        // В меню
+        function backToMenu() {
+            document.getElementById('pauseMenu').style.display = 'none';
+            document.getElementById('gameOver').style.display = 'none';
+            document.getElementById('mainMenu').style.display = 'block';
+            gameState = 'menu';
+            gameRunning = false;
+            stopEnemySpawner(); // Останавливаем спавн врагов
+        }
+        
+        // Конец игры
+        function gameOver() {
+            gameRunning = false;
+            document.getElementById('finalScore').textContent = `Ваш счёт: ${score}`;
+            document.getElementById('gameOver').style.display = 'block';
+        }
+        
+
+        
+        // Рисование облаков
+        function drawClouds() {
+            ctx.fillStyle = '#ffffff';
+            // Облако 1
+            ctx.fillRect(170, 85, 102, 34);
+            ctx.fillRect(187, 68, 68, 34);
+            // Облако 2
+            ctx.fillRect(680, 136, 102, 34);
+            ctx.fillRect(697, 119, 68, 34);
+            // Облако 3
+            ctx.fillRect(1020, 68, 102, 34);
+            ctx.fillRect(1037, 51, 68, 34);
+            // Облако 4
+            ctx.fillRect(340, 170, 102, 34);
+            ctx.fillRect(357, 153, 68, 34);
+            // Облако 5
+            ctx.fillRect(850, 200, 102, 34);
+            ctx.fillRect(867, 183, 68, 34);
+        }
+        
+        // Главный игровой цикл
+        function gameLoop(timestamp) {
+            if (!gameRunning || gameState !== 'playing') return;
+            
+            // Контроль FPS
+            if (timestamp - lastFrameTime < frameTime) {
+                requestAnimationFrame(gameLoop);
+                return;
+            }
+            lastFrameTime = timestamp;
+            
+            // Очистка экрана
+            ctx.fillStyle = '#5c94fc';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Рисование фона
+            drawClouds();
+            drawPlatforms();
+            drawSummon();
+            
+            // Обновление
+            updatePlayer();
+            
+            for (let enemy of enemies) {
+                enemy.update();
+            }
+            
+            checkCollisions();
+            checkSummonCollection();
+            
+            // Рисование
+            drawPlayer();
+            
+            for (let enemy of enemies) {
+                if (enemy.alive) {
+                    enemy.draw();
+                }
+            }
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Инициализация
+        updateScore();
+    </script>
+</body>
+</html>

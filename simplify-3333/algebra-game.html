@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Алгебраический Упроститель - Математическая Игра</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 1000px;
+            width: 100%;
+            padding: 30px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+
+        .expression-container {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            min-height: 200px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid #e0e0e0;
+        }
+
+        .term {
+            background: white;
+            border: 3px solid #667eea;
+            border-radius: 10px;
+            padding: 15px 25px;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.3s;
+            user-select: none;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .term:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .term.selected {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: scale(1.1);
+            border-color: #764ba2;
+        }
+
+        .term.correct {
+            animation: correctPulse 0.6s;
+        }
+
+        .term.wrong {
+            animation: wrongShake 0.5s;
+        }
+
+        @keyframes correctPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); background: #4CAF50; }
+        }
+
+        @keyframes wrongShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .operator {
+            font-size: 1.8em;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+        }
+
+        .message {
+            text-align: center;
+            font-size: 1.3em;
+            color: #667eea;
+            font-weight: bold;
+            min-height: 40px;
+            margin-bottom: 20px;
+        }
+
+        .hint-box {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #856404;
+        }
+
+        .hint-box strong {
+            color: #664d03;
+        }
+
+        .victory-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .victory-content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            max-width: 500px;
+            animation: victoryPop 0.5s;
+        }
+
+        @keyframes victoryPop {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .victory-content h2 {
+            color: #4CAF50;
+            font-size: 3em;
+            margin-bottom: 20px;
+        }
+
+        .victory-content p {
+            font-size: 1.3em;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .difficulty-selector {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .difficulty-btn {
+            padding: 10px 20px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .difficulty-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .difficulty-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .progress-bar {
+            background: #e0e0e0;
+            border-radius: 10px;
+            height: 20px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #4CAF50 0%, #45a049 100%);
+            height: 100%;
+            transition: width 0.3s;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>🧮 Алгебраический Упроститель</h1>
+            <p>Кликай на подобные слагаемые, чтобы упростить выражение!</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat-box">
+                <div class="stat-label">📊 Уровень</div>
+                <div class="stat-value" id="level">1</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">⭐ Очки</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">🎯 Слагаемых</div>
+                <div class="stat-value" id="termsLeft">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">🔥 Комбо</div>
+                <div class="stat-value" id="combo">0</div>
+            </div>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressBar" style="width: 0%"></div>
+        </div>
+
+        <div class="message" id="message">Выбери два подобных слагаемых!</div>
+
+        <div class="hint-box">
+            <strong>💡 Подсказка:</strong> Подобные слагаемые имеют одинаковую буквенную часть. 
+            Например: <code>3x</code> и <code>5x</code>, или <code>2xy</code> и <code>-4xy</code>
+        </div>
+
+        <div class="expression-container" id="expressionContainer"></div>
+
+        <div class="controls">
+            <button class="btn" onclick="newExpression()">🔄 Новое выражение</button>
+            <button class="btn btn-secondary" onclick="clearSelection()">❌ Сбросить выбор</button>
+            <button class="btn btn-success" onclick="checkSolution()">✅ Проверить упрощение</button>
+        </div>
+
+        <div class="difficulty-selector">
+            <button class="difficulty-btn active" onclick="setDifficulty('easy')">Легко</button>
+            <button class="difficulty-btn" onclick="setDifficulty('medium')">Средне</button>
+            <button class="difficulty-btn" onclick="setDifficulty('hard')">Сложно</button>
+        </div>
+    </div>
+
+    <div class="victory-screen" id="victoryScreen">
+        <div class="victory-content">
+            <h2>🎉 ПОБЕДА!</h2>
+            <p id="victoryMessage">Выражение полностью упрощено!</p>
+            <div id="victoryStats"></div>
+            <button class="btn" onclick="nextLevel()">Следующий уровень ➡️</button>
+        </div>
+    </div>
+
+    <script>
+        // Игровое состояние
+        let gameState = {
+            level: 1,
+            score: 0,
+            combo: 0,
+            difficulty: 'easy',
+            terms: [],
+            selectedTerms: [],
+            totalTermsInExpression: 0
+        };
+
+        // Переменные для генерации
+        const variables = ['x', 'y', 'z', 'a', 'b'];
+        const multiVars = ['xy', 'xz', 'yz', 'ab', 'x²', 'y²'];
+
+        // Класс для слагаемого
+        class Term {
+            constructor(coefficient, variable) {
+                this.coefficient = coefficient;
+                this.variable = variable;
+                this.id = Math.random().toString(36).substr(2, 9);
+            }
+
+            toString() {
+                if (this.coefficient === 0) return '0';
+                
+                let result = '';
+                
+                if (this.variable === '') {
+                    result = this.coefficient.toString();
+                } else {
+                    if (this.coefficient === 1) {
+                        result = this.variable;
+                    } else if (this.coefficient === -1) {
+                        result = '-' + this.variable;
+                    } else {
+                        result = this.coefficient + this.variable;
+                    }
+                }
+                
+                return result;
+            }
+
+            isSimilar(other) {
+                return this.variable === other.variable;
+            }
+
+            add(other) {
+                if (!this.isSimilar(other)) return null;
+                return new Term(this.coefficient + other.coefficient, this.variable);
+            }
+        }
+
+        // Генерация случайного коэффициента
+        function randomCoeff(difficulty) {
+            let max;
+            switch(difficulty) {
+                case 'easy': max = 10; break;
+                case 'medium': max = 20; break;
+                case 'hard': max = 50; break;
+                default: max = 10;
+            }
+            
+            let coeff = Math.floor(Math.random() * max) + 1;
+            return Math.random() > 0.5 ? coeff : -coeff;
+        }
+
+        // Генерация выражения
+        function generateExpression(level, difficulty) {
+            const terms = [];
+            let numTerms;
+            let numVariables;
+
+            // Определяем количество слагаемых и переменных
+            switch(difficulty) {
+                case 'easy':
+                    numTerms = 4 + Math.floor(level / 2);
+                    numVariables = Math.min(2, 1 + Math.floor(level / 3));
+                    break;
+                case 'medium':
+                    numTerms = 6 + Math.floor(level / 2);
+                    numVariables = Math.min(3, 2 + Math.floor(level / 3));
+                    break;
+                case 'hard':
+                    numTerms = 8 + Math.floor(level / 2);
+                    numVariables = Math.min(4, 2 + Math.floor(level / 2));
+                    break;
+            }
+
+            numTerms = Math.min(numTerms, 20); // Максимум 20 слагаемых
+
+            // Выбираем переменные для этого уровня
+            const usedVars = [];
+            const varPool = difficulty === 'hard' && level > 5 ? [...variables, ...multiVars] : variables;
+            
+            for (let i = 0; i < numVariables; i++) {
+                const randomVar = varPool[Math.floor(Math.random() * varPool.length)];
+                if (!usedVars.includes(randomVar)) {
+                    usedVars.push(randomVar);
+                }
+            }
+
+            // Генерируем слагаемые так, чтобы было несколько подобных
+            for (let i = 0; i < numTerms; i++) {
+                const variable = usedVars[Math.floor(Math.random() * usedVars.length)];
+                const coefficient = randomCoeff(difficulty);
+                terms.push(new Term(coefficient, variable));
+            }
+
+            // Добавляем несколько констант для усложнения
+            if (difficulty !== 'easy' && Math.random() > 0.5) {
+                const numConstants = Math.floor(Math.random() * 3) + 1;
+                for (let i = 0; i < numConstants; i++) {
+                    terms.push(new Term(randomCoeff(difficulty), ''));
+                }
+            }
+
+            // Перемешиваем
+            for (let i = terms.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [terms[i], terms[j]] = [terms[j], terms[i]];
+            }
+
+            return terms;
+        }
+
+        // Отрисовка выражения
+        function renderExpression() {
+            const container = document.getElementById('expressionContainer');
+            container.innerHTML = '';
+
+            gameState.terms.forEach((term, index) => {
+                // Создаём элемент слагаемого
+                const termEl = document.createElement('div');
+                termEl.className = 'term';
+                termEl.textContent = term.toString();
+                termEl.dataset.id = term.id;
+                termEl.addEventListener('click', () => selectTerm(term.id));
+                container.appendChild(termEl);
+
+                // Добавляем знак +, если это не последнее слагаемое
+                if (index < gameState.terms.length - 1) {
+                    const operator = document.createElement('span');
+                    operator.className = 'operator';
+                    
+                    // Если следующее слагаемое отрицательное, показываем минус
+                    const nextTerm = gameState.terms[index + 1];
+                    if (nextTerm.coefficient < 0) {
+                        operator.textContent = '−';
+                        // Делаем следующий коэффициент положительным для отображения
+                        nextTerm.coefficient = Math.abs(nextTerm.coefficient);
+                    } else {
+                        operator.textContent = '+';
+                    }
+                    
+                    container.appendChild(operator);
+                }
+            });
+
+            updateStats();
+        }
+
+        // Выбор слагаемого
+        function selectTerm(termId) {
+            const term = gameState.terms.find(t => t.id === termId);
+            if (!term) return;
+
+            const termEl = document.querySelector(`[data-id="${termId}"]`);
+            
+            // Если слагаемое уже выбрано, отменяем выбор
+            if (gameState.selectedTerms.includes(termId)) {
+                gameState.selectedTerms = gameState.selectedTerms.filter(id => id !== termId);
+                termEl.classList.remove('selected');
+                return;
+            }
+
+            // Если уже выбрано 2 слагаемых, сбрасываем
+            if (gameState.selectedTerms.length >= 2) {
+                clearSelection();
+            }
+
+            // Добавляем в выбранные
+            gameState.selectedTerms.push(termId);
+            termEl.classList.add('selected');
+
+            // Если выбрано 2 слагаемых, проверяем
+            if (gameState.selectedTerms.length === 2) {
+                setTimeout(() => checkCombination(), 300);
+            }
+        }
+
+        // Проверка комбинации
+        function checkCombination() {
+            const term1 = gameState.terms.find(t => t.id === gameState.selectedTerms[0]);
+            const term2 = gameState.terms.find(t => t.id === gameState.selectedTerms[1]);
+
+            if (!term1 || !term2) return;
+
+            const term1El = document.querySelector(`[data-id="${term1.id}"]`);
+            const term2El = document.querySelector(`[data-id="${term2.id}"]`);
+
+            if (term1.isSimilar(term2)) {
+                // Правильно!
+                term1El.classList.add('correct');
+                term2El.classList.add('correct');
+
+                const combined = term1.add(term2);
+                
+                // Увеличиваем комбо и очки
+                gameState.combo++;
+                gameState.score += 10 * gameState.combo;
+
+                showMessage(`✅ Отлично! ${term1.toString()} + (${term2.toString()}) = ${combined.toString()}`, 'success');
+
+                setTimeout(() => {
+                    // Удаляем старые слагаемые
+                    gameState.terms = gameState.terms.filter(t => 
+                        t.id !== term1.id && t.id !== term2.id
+                    );
+
+                    // Добавляем объединённое слагаемое, если оно не равно 0
+                    if (combined.coefficient !== 0) {
+                        gameState.terms.push(combined);
+                    }
+
+                    gameState.selectedTerms = [];
+                    renderExpression();
+
+                    // Проверяем победу
+                    if (isSimplified()) {
+                        showVictory();
+                    }
+                }, 1000);
+
+            } else {
+                // Неправильно
+                term1El.classList.add('wrong');
+                term2El.classList.add('wrong');
+                gameState.combo = 0;
+
+                showMessage(`❌ Эти слагаемые не подобны! ${term1.variable || 'константа'} ≠ ${term2.variable || 'константа'}`, 'error');
+
+                setTimeout(() => {
+                    term1El.classList.remove('wrong');
+                    term2El.classList.remove('wrong');
+                    clearSelection();
+                }, 500);
+            }
+        }
+
+        // Сброс выбора
+        function clearSelection() {
+            gameState.selectedTerms.forEach(id => {
+                const el = document.querySelector(`[data-id="${id}"]`);
+                if (el) el.classList.remove('selected');
+            });
+            gameState.selectedTerms = [];
+        }
+
+        // Проверка, упрощено ли выражение
+        function isSimplified() {
+            const variables = {};
+            
+            for (const term of gameState.terms) {
+                if (variables[term.variable]) {
+                    return false; // Есть подобные слагаемые
+                }
+                variables[term.variable] = true;
+            }
+            
+            return true;
+        }
+
+        // Проверка решения
+        function checkSolution() {
+            if (isSimplified()) {
+                showVictory();
+            } else {
+                showMessage('❌ Выражение ещё можно упростить! Ищи подобные слагаемые.', 'error');
+                gameState.combo = 0;
+                updateStats();
+            }
+        }
+
+        // Показать сообщение
+        function showMessage(text, type) {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = text;
+            messageEl.style.color = type === 'error' ? '#f5576c' : '#4CAF50';
+        }
+
+        // Показать экран победы
+        function showVictory() {
+            const victoryScreen = document.getElementById('victoryScreen');
+            const victoryMessage = document.getElementById('victoryMessage');
+            const victoryStats = document.getElementById('victoryStats');
+
+            const simplificationPercent = Math.round((1 - gameState.terms.length / gameState.totalTermsInExpression) * 100);
+            
+            victoryMessage.textContent = `Выражение упрощено на ${simplificationPercent}%!`;
+            victoryStats.innerHTML = `
+                <p><strong>Очки:</strong> ${gameState.score}</p>
+                <p><strong>Максимальное комбо:</strong> ${gameState.combo}</p>
+                <p><strong>Слагаемых осталось:</strong> ${gameState.terms.length}</p>
+            `;
+
+            victoryScreen.style.display = 'flex';
+        }
+
+        // Следующий уровень
+        function nextLevel() {
+            gameState.level++;
+            gameState.combo = 0;
+            document.getElementById('victoryScreen').style.display = 'none';
+            newExpression();
+        }
+
+        // Новое выражение
+        function newExpression() {
+            gameState.terms = generateExpression(gameState.level, gameState.difficulty);
+            gameState.totalTermsInExpression = gameState.terms.length;
+            gameState.selectedTerms = [];
+            gameState.combo = 0;
+            renderExpression();
+            showMessage('Выбери два подобных слагаемых!', 'info');
+        }
+
+        // Установка сложности
+        function setDifficulty(difficulty) {
+            gameState.difficulty = difficulty;
+            gameState.level = 1;
+            gameState.score = 0;
+            
+            // Обновляем кнопки
+            document.querySelectorAll('.difficulty-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            newExpression();
+        }
+
+        // Обновление статистики
+        function updateStats() {
+            document.getElementById('level').textContent = gameState.level;
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('termsLeft').textContent = gameState.terms.length;
+            document.getElementById('combo').textContent = gameState.combo;
+
+            // Прогресс-бар
+            const progress = Math.max(0, 100 - (gameState.terms.length / gameState.totalTermsInExpression * 100));
+            document.getElementById('progressBar').style.width = progress + '%';
+        }
+
+        // Инициализация игры
+        function init() {
+            newExpression();
+            showMessage('🎯 Начни упрощать выражение! Кликай на подобные слагаемые.', 'info');
+        }
+
+        init();
+    </script>
+</body>
+</html>
